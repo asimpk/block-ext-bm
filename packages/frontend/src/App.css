@@ -1,0 +1,215 @@
+.App {
+  text-align: center;
+  width: 560px;
+  height: 600px;
+  justify-content: flex-start;
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+}
+
+.frontPageLogo {
+  width: 80%;
+}
+
+.frontPageButton {
+  width: 90%;
+  margin-top: 20px;
+}
+
+.frontPageBottom {
+  align-items: flex-end;
+  display: flex;
+  height: 100%;
+  justify-content: center;
+  width: 100%;
+  margin-bottom: 15px;
+  gap: 5px;
+}
+
+.frontPageBottom:hover {
+  cursor: pointer;
+  color: gray;
+}
+
+h2 {
+  font-size: 40px;
+  margin-bottom: 5px;
+  color: rgb(46, 46, 46);
+}
+
+.h4 {
+  color: rgb(46, 46, 46);
+  padding-bottom: 50px;
+}
+
+a:visited {
+  color: blue;
+}
+
+header {
+  width: 100%;
+  height: 70px;
+  background-color: #f9f9f9;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.headerLogo {
+  height: 30px;
+  margin-left: 20px;
+}
+
+.dropdown {
+  margin-right: 20px;
+}
+
+.content {
+  text-align: center;
+  width: 350px;
+  height: 520px;
+  overflow-y: auto;
+  justify-content: flex-start;
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.mnemonic {
+  color: #faad14;
+  background: #fffbe6;
+  border: 1px solid #ffe58f;
+  padding: 5px;
+  text-align: justify;
+  width: 310px;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 10px;
+}
+
+.seedPhraseContainer {
+  width: 310px;
+  min-height: 160px;
+  padding: 5px;
+  margin-top: 30px;
+}
+
+.walletName {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.logoutButton {
+  width: 40px;
+  height: 40px;
+  justify-content: center;
+  align-items: center;
+  display: flex;
+  margin-right: 6px;
+  /* position: absolute;
+  right: 20px;
+  top: 5px; */
+  border-radius: 100px;
+}
+
+.logoutButton:hover {
+  background-color: rgba(0, 0, 0, 0.036);
+  cursor: pointer;
+}
+
+.walletView {
+  width: 350px;
+  padding: 10px;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.sendRow {
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: flex-start;
+  gap: 10px;
+  align-items: center;
+}
+
+.nftImage {
+  margin-bottom: 10px;
+  height: 240px;
+  width: 240px;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+.floatButton > .ant-float-btn-group-wrap {
+  position: absolute;
+  top: 55px;
+}
+
+.ant-collapse-header {
+  padding: 6px 8px !important;
+}
+.ant-collapse-header-text {
+  text-align: start;
+}
+
+.ant-collapse-arrow svg {
+  font-size: 10px;
+}
+
+.ant-collapse-arrow svg {
+  font-size: 10px;
+}
+
+.anticon-menu-unfold svg {
+  font-size: 16px;
+}
+
+.ant-collapse-expand-icon {
+  padding-inline-end: 4px;
+}
+
+.ant-float-btn-body {
+  height: 100%;
+}
+
+.ant-float-btn-square {
+  width: 35px;
+  padding: 1px !important;
+  height: 35px;
+  border-radius: 8px !important;
+}
+
+.ant-float-btn-icon {
+  margin: 0;
+}
+.ant-float-btn-content {
+  margin: 0;
+  padding: 0;
+}
+.ant-float-btn-body {
+  height: 100% !important;
+}
+.ant-collapse-content-box {
+  padding: 0 0 !important;
+  margin: 0;
+  text-align: start;
+}
+
+
+/* Track */
+::-webkit-scrollbar-track {
+  background-color: #333; /* Change this to your desired background color */
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background-color: #888; /* Change this to your desired handle color */
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background-color: #555; /* Change this to your desired handle color on hover */
+}
