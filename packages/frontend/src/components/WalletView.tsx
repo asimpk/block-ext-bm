@@ -4,8 +4,10 @@ import { useNavigate } from "react-router-dom";
 import { CHAINS_CONFIG } from "../chains";
 import { ethers } from "ethers";
 import { useWeb3 } from "../contexts/Web3Context/Web3Context";
-import { Box, Button, Container, IconButton, ListItem, ListItemButton, ListItemText, Paper, Tab, Tabs, TextField, Tooltip, Typography } from "@mui/material";
-import { FixedSizeList, ListChildComponentProps } from 'react-window';
+import { Box, Button, Container, FormControl, IconButton, Input, InputLabel, List, ListItem, ListItemButton, ListItemText, Paper, Tab, Tabs, TextField, Tooltip, Typography } from "@mui/material";
+import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
+import CustomScrollbar from "./CustomScrollbar";
+import PasswordModal from "./Modals/PasswordModal";
 
 
 
@@ -40,10 +42,13 @@ function TabPanel(props: TabPanelProps) {
           width: '77%',
           minHeight: '265px',
           maxHeight: 'fit-content',
-          marginTop: '15px'
+          marginTop: '15px',
+          overflow: 'auto'
 
         }}>
-          {children}
+          <CustomScrollbar>
+            {children}
+          </CustomScrollbar>
         </Paper>
       )}
     </div>
@@ -71,8 +76,13 @@ function WalletView({
   const [processing, setProcessing] = useState(false);
   const [hash, setHash] = useState("");
   const [value, setValue] = React.useState(0);
+  const [accountActivities, setAccountActivities] = useState<{ methodName: string, transactionHash: string, status: boolean }[]>([])
+  const [showButton, setShowButton] = useState(false)
+  const [showPrivateKey, setShowPrivateKey] = useState(false)
+  const [showPasswordModal, setShowPasswordModal] = useState(false)
+  const [password, setPassword] = useState("");
 
-  const { Wallet, publicAddress, disconnectWallet, encryptMessages, decryptMessages } = useWeb3()
+  const { Wallet, publicAddress, getPrivateKey } = useWeb3()
 
 
 
@@ -131,12 +141,24 @@ function WalletView({
   }
 
   useEffect(() => {
+    if (publicAddress) {
+      chrome.storage.local.get([publicAddress], function (result) {
+        const accountActivityData = result[publicAddress] || [];
+        setAccountActivities(accountActivityData)
+      })
+    }
+  }, [])
+
+
+  useEffect(() => {
     if (!publicAddress || !selectedChain) return;
     setNfts([]);
     setTokens([]);
     setBalance(0);
     getAccountTokens();
   }, []);
+
+
 
   useEffect(() => {
     if (!publicAddress) return;
@@ -147,26 +169,27 @@ function WalletView({
   }, [selectedChain]);
 
   const handleChange = (event: React.SyntheticEvent, newValue: string) => {
+    if(parseInt(newValue) !== 2 && showPrivateKey){
+      setShowPrivateKey(false)
+      setPassword("")
+    }
     setValue(parseInt(newValue));
   };
 
 
-  const renderRow = (props: ListChildComponentProps) => {
-    const { index, style } = props;
-  
-    return (
-      <ListItem style={style} key={index} component="div" disablePadding>
-        <ListItemButton>
-          <ListItemText primary={`Item ${index + 1}`} />
-        </ListItemButton>
-      </ListItem>
-    );
-  }
+  const submitHandle = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if(password){
+        const isPrivateKey = await getPrivateKey(password);
+        setShowPasswordModal(false)
+        if(isPrivateKey){
+          setShowPrivateKey(true)
+        }
+    }
+}
 
   return (
     <>
-
-
       <Container sx={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '10px 0px' }}>
         <Typography component="h1" variant="h6">
           Account
@@ -224,44 +247,90 @@ function WalletView({
 
         </TabPanel>
         <TabPanel value={value} index={1}>
-          <FixedSizeList
-            height={"100%"}
-            width={"100%"}
-            itemSize={46}
-            itemCount={200}
-            overscanCount={5}
-          >
-            {renderRow}
-          </FixedSizeList>
+          <List>
+
+
+            {
+              accountActivities?.map(activity => {
+                return <ListItem
+                  secondaryAction={
+                    <Tooltip title="View on block explorer">
+                      <IconButton edge="end" aria-label="delete" sx={{ margin: 0 }} size="small" onClick={() => window.open(`https://mumbai.polygonscan.com/tx/${activity.transactionHash}`, '_blank')}>
+                        <VisibilityOutlinedIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  }
+                  key={activity.transactionHash}
+                >
+                  <ListItemText
+                    primary={activity.methodName}
+                    sx={{ fontSize: '14px !important' }}
+                  />
+                </ListItem>
+              })
+            }
+
+          </List>
         </TabPanel>
         <TabPanel value={value} index={2}>
-          <HourglassEmptyOutlinedIcon sx={{ fontSize: 40, marginTop: 'auto', marginBottom: 'auto' }} />
+          <Container sx={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '10px 0px' }}>
+            {/* <Typography component="h1" variant="h6">
+              Wallet Address
+            </Typography> */}
+            <Tooltip title={publicAddress}>
+              <Typography sx={{ width: "80%", wordWrap: "break-word", marginTop: 1 }}>
+                {publicAddress}
+              </Typography>
+            </Tooltip>
+          </Container>
+          <Container sx={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '10px 0px' }}>
+            {
+              (!showPasswordModal && !showPrivateKey) && <Button
+                onClick={() => setShowPasswordModal(true)}
+                variant="outlined"
+                sx={{ marginTop: "30px", padding: "0", width: '85%' }}
+              >
+                Show Private Key
+              </Button>
+
+            }
+            {
+              showPrivateKey && <Tooltip title={publicAddress}>
+                <Typography sx={{ width: "80%", wordWrap: "break-word", marginTop: 1 }}>
+                  {Wallet && Wallet?.privateKey}
+                </Typography>
+              </Tooltip>
+            }
+
+          </Container>
+          {
+            showPasswordModal && <>
+            <form onSubmit={(e) => submitHandle(e)} style={{ width: '100%', display: "flex", flexDirection: "column",  alignItems: "center" }}>
+                <FormControl margin="normal" required fullWidth sx={{ width: "80%" }}>
+                    <InputLabel htmlFor="password">Password</InputLabel>
+                    <Input
+                        name="password"
+                        type="password"
+                        id="password"
+                        autoComplete="current-password"
+                        value={password}
+                        onChange={e => setPassword(e.target.value)}
+                    />
+                </FormControl>
+                <Button
+                    type="submit"
+                    variant="outlined"
+                    sx={{ margin: "10px 0", padding: "0 15px", width: '80%' }}
+                >
+                    Confirm
+                </Button>
+            </form>
+            </>
+
+          }
         </TabPanel>
       </Box>
-
-      {/* </Container> */}
     </>
-    // <>
-    //   <div className="content">
-    //     <div className="walletName" style={{ display: 'flex', justifyContent: 'space-around' }}>Wallet {<LogoutOutlinedIcon onClick={() => disconnectWallet()} />}</div>
-    //     {publicAddress &&
-    //       <Tooltip title={publicAddress}>
-    //         <div>
-    //           {publicAddress.slice(0, 4)}...{publicAddress.slice(38)}
-    //         </div>
-
-    //       </Tooltip>
-    //     }
-
-    //     <Divider />
-
-    //     {fetching ? (
-    //       <Spin />
-    //     ) : (
-    //       <Tabs defaultActiveKey="1" items={items} className="walletView" />
-    //     )}
-    //   </div>
-    // </>
   );
 }
 

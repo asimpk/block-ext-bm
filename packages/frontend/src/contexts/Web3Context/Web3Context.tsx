@@ -10,6 +10,7 @@ type Web3ContextType = {
     connectWallet: (password: string, seedPhrase: string, privateAccount?: string) => void;
     disconnectWallet: () => void;
     userSignIn: (passphrase: string) => void;
+    getPrivateKey: (passphrase: string) => Promise<boolean>;
     encryptMessages: () => Promise<void>,
     decryptMessages: () => Promise<void>,
     createFolder: (folderName: string) => Promise<void>,

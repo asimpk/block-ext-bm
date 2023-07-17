@@ -23,7 +23,7 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
     const [unWrappedKey, setUnWrappedKey] = useState<CryptoKey>()
     const [contractInstances, setContractInstances] = useState<ethers.Contract[] | null>(null);
     const [showConfirm, setShowConfirm] = useState(false)
-    const [transaction, setTransaction] = useState<ethers.providers.TransactionRequest>()
+    const [transaction, setTransaction] = useState<{ transaction: ethers.providers.TransactionRequest, method: string }>()
     const [status, setStatus] = useState('idle');
     const navigate = useNavigate();
 
@@ -43,7 +43,7 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
 
 
     useEffect(() => {
-        chrome && chrome.storage.session.get(["sessionkey",]).then(async (result) => {
+        chrome && chrome.storage.session.get(["sessionkey"]).then(async (result) => {
             const resultLocal = await chrome.storage.local.get(["encryptMnemonicStore", "wrappedKeyString"])
             const { sessionkey } = result;
             let retrievedSessionK, retrievedwrappedKey;
@@ -276,6 +276,39 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
 
     }
 
+    const isPrivateKeyValid = (privateKey: string) => {
+        const validPrivateKeyRegex = /^(0x)?[0-9a-fA-F]{64}$/;
+
+        return validPrivateKeyRegex.test(privateKey);
+    }
+
+    const getPrivateKey = async (passphrase: string): Promise<boolean> => {
+        // Retrieve the encryptedStore from chrome.storage.local
+        const { encryptMnemonicStore, userSalt, wrappedKeyString } = await chrome.storage.local.get(['encryptMnemonicStore', "userSalt", "wrappedKeyString"])
+        if (encryptMnemonicStore && userSalt && wrappedKeyString) {
+            let privateKey;
+            const userSaltArray = base64ToUint8Array(userSalt)
+            const wrappingKey = await deriveWrappingKey(passphrase, userSaltArray)
+            const retrievedwrappedKey = base64StringToArrayBuffer(wrappedKeyString);
+            const unWrappedKey = await getUnwrappedKey(retrievedwrappedKey, wrappingKey)
+            const decryptedMnemonic = await decryptMnemonic(unWrappedKey, encryptMnemonicStore)
+            if (decryptedMnemonic.split(" ").length === 12) {
+                privateKey = ethers.Wallet.fromMnemonic(decryptedMnemonic).privateKey;
+            } else {
+                privateKey = decryptedMnemonic;
+            }
+
+            if (isPrivateKeyValid(privateKey)) {
+                return true
+            } else {
+                return false
+            }
+
+        }
+        return false
+
+    }
+
     const encryptMessages = async () => {
         if (unWrappedKey && wallet) {
             const signature1 = EthCrypto.sign(
@@ -372,7 +405,7 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
             const color = ethers.utils.formatBytes32String("#000000");
             const transaction = await prepareTransaction(tabBookmarks, wallet, "createFolder", [folderId, name, color])
             if (transaction) {
-                setTransaction(transaction);
+                setTransaction({ transaction, method: "Create Folder" });
                 setShowConfirm(true)
             }
         }
@@ -384,12 +417,12 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
             const folderId = ethers.utils.formatBytes32String(deltFolderId);
             const transaction = await prepareTransaction(tabBookmarks, wallet, "deleteFolder", [folderId])
             if (transaction) {
-                setTransaction(transaction);
+                setTransaction({ transaction, method: "Delete Folder" });
                 setShowConfirm(true)
             }
         }
     }
-    
+
     const updateFolder = async (deltFolderId: string) => {
         if (contractInstances && wallet) {
             const [tabBookmarks] = contractInstances;
@@ -398,7 +431,7 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
             const color = ethers.utils.formatBytes32String("#000000 updated");
             const transaction = await prepareTransaction(tabBookmarks, wallet, "updateFolder", [folderId, name, color])
             if (transaction) {
-                setTransaction(transaction);
+                setTransaction({ transaction, method: "Update Folder" });
                 setShowConfirm(true)
             }
         }
@@ -412,22 +445,49 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
             const bookmarkId = ethers.utils.formatBytes32String(uuid);
             const transaction = await prepareTransaction(tabBookmarks, wallet, "addBookmark", [folderIdBytes, bookmarkId, urlVal])
             if (transaction) {
-                setTransaction(transaction);
+                setTransaction({ transaction, method: "Add Bookmark" });
                 setShowConfirm(true)
             }
         }
     }
 
+    const setAccountActivities = (publicAddress: string, methodName: string, transactionHash: string, status: boolean) => {
+        // Retrieve the array from Chrome local storage
+        console.log("setAccountActivities", publicAddress)
+        chrome.storage.local.get(publicAddress, function (result) {
+            // Check if the "accountActivity" key exists in local storage
+            // If it doesn't exist, initialize it as an empty array
+            const accountActivityData = result[publicAddress] || [];
+
+            // Create a new object with the method name and transaction hash
+            const newActivity = { methodName, transactionHash, status };
+
+            // Add the new object to the front of the array
+            accountActivityData.unshift(newActivity);
+
+            // Now, you have the updated array with the new object added at the front
+            console.log(accountActivityData);
+
+            // Save the updated array back to Chrome local storage
+            chrome.storage.local.set({ [publicAddress]: accountActivityData }, function () {
+                console.log("Data saved successfully!");
+            });
+        });
+
+    }
+
     const confirmTransaction = async () => {
-        if (wallet && transaction) {
+        if (wallet && transaction && transaction?.transaction && publicAddress) {
             setShowConfirm(false)
             setStatus('pending')
-            const response = await wallet.sendTransaction(transaction);
+            const response = await wallet.sendTransaction(transaction?.transaction);
             const receiept = await response.wait();
-            console.log("receiept", receiept)
             if (receiept?.status) {
+                console.log("confirmTransaction", receiept, response, transaction);
+                setAccountActivities(publicAddress, transaction.method, receiept?.transactionHash, true)
                 setStatus('confirmed')
             } else {
+                setAccountActivities(publicAddress, transaction.method, receiept?.transactionHash, false)
                 setStatus('failed')
             }
             setTransaction(undefined)
@@ -444,6 +504,7 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
         contractInstances,
         showConfirm,
         userSignIn,
+        getPrivateKey,
         connectWallet,
         disconnectWallet,
         encryptMessages,
