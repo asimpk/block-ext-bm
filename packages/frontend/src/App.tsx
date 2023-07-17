@@ -25,7 +25,7 @@ import { useWeb3 } from './contexts/Web3Context/Web3Context';
 import { useAppState } from './contexts/StateConrext/StateContext';
 // import BookMarks from './components/BookMarks';
 import useAddBookmarkBtn from './hooks/useAddBookmarkBtn';
-import { Alert, Card, Divider, Drawer, IconButton, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Paper, Snackbar, Typography } from '@mui/material';
+import { Alert, Box, Card, Container, Divider, Drawer, IconButton, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Paper, Snackbar, Typography } from '@mui/material';
 import Home from './components/Home';
 import BlockchainBookmarks from './components/BlockchainBookmarks';
 import CustomScrollbar from './components/CustomScrollbar';
@@ -87,63 +87,48 @@ function App() {
           </Snackbar>}
 
 
-        <div>
-          <Drawer
-            variant="permanent"
-            open={false}
-            sx={{ justifyContent: 'space-between' }}
-          >
-            <List sx={{ maxWidth: 60 }}>
-              <ListItemButton key={1} onClick={() => navigate("/")}>
-                <ListItemIcon sx={{ minWidth: 40 }}>
-                  <DashboardIcon />
-                </ListItemIcon>
-              </ListItemButton>
-              <Divider />
-              {/* <ListItemButton key={2} onClick={() => navigate("/")}>
-                <ListItemIcon sx={{ minWidth: 40 }}>
-                  <HomeOutlinedIcon />
-                </ListItemIcon>
-              </ListItemButton> */}
-              <ListItemButton key={3} onClick={() => navigate("/blockchain-bookmarks")}>
-                <ListItemIcon sx={{ minWidth: 40 }}>
-                  <BookmarksOutlinedIcon />
-                </ListItemIcon>
-              </ListItemButton>
-              {/* <ListItemButton key={4}>
-                <ListItemIcon sx={{ minWidth: 40 }}>
-                  <BarChartIcon />
-                </ListItemIcon>
-              </ListItemButton> */}
-              {/* <ListItemButton key={5}>
-                <ListItemIcon sx={{ minWidth: 40 }}>
-                  <LayersIcon />
-                </ListItemIcon>
-              </ListItemButton> */}
 
-
-
-            </List>
-            <List sx={{ maxWidth: 60 }}>
-              <ListItemButton key={6} onClick={() => navigate("/wallet")}>
-                <ListItemIcon sx={{ minWidth: 40 }}>
-                  <AccountCircleOutlinedIcon />
-                </ListItemIcon>
-              </ListItemButton>
-            </List>
-          </Drawer>
-        </div>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/blockchain-bookmarks" element={<BlockchainBookmarks />} />
-          <Route path="/blockchain-bookmarks/:folderId" element={<FolderBookmarks />} />
-          <Route path="/blockchain-bookmarks/:folderId/:bookmarkId" element={<BlockchainBookmarkDetail />} />
-          <Route path="/community-bookmarks" element={<CommunityBookmarks />} />
-          <Route path="/wallet" element={<WalletNew />} />
-          <Route path="/recover-account" element={<RecoverAccount />} />
-          <Route path="/create-account" element={<CreateAccount />} />
-          <Route path="/import-account" element={<ImportAccount />} />
-        </Routes>
+        <Paper
+          sx={{ display: "flex", flexDirection: "column", width: "60px" }}
+        >
+          <List sx={{ padding: "8px 0 0 0" }}>
+            <ListItemButton key={1} onClick={() => navigate("/")}>
+              <ListItemIcon sx={{ minWidth: 40 }}>
+                <DashboardIcon />
+              </ListItemIcon>
+            </ListItemButton>
+          </List>
+          <List sx={{ flex: "1", padding: "11px 0 0 0" }}>
+            <Divider />
+            <ListItemButton key={3} onClick={() => navigate("/blockchain-bookmarks")}>
+              <ListItemIcon sx={{ minWidth: 40 }}>
+                <BookmarksOutlinedIcon />
+              </ListItemIcon>
+            </ListItemButton>
+          </List>
+          <List sx={{ maxWidth: 60 }}>
+            <ListItemButton key={6} onClick={() => navigate("/wallet")}>
+              <ListItemIcon sx={{ minWidth: 40 }}>
+                <AccountCircleOutlinedIcon />
+              </ListItemIcon>
+            </ListItemButton>
+          </List>
+        </Paper>
+        <Box
+          sx={{ flex: "1" }}
+        >
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/blockchain-bookmarks" element={<BlockchainBookmarks />} />
+            <Route path="/blockchain-bookmarks/:folderId" element={<FolderBookmarks />} />
+            <Route path="/blockchain-bookmarks/:folderId/:bookmarkId" element={<BlockchainBookmarkDetail />} />
+            <Route path="/community-bookmarks" element={<CommunityBookmarks />} />
+            <Route path="/wallet" element={<WalletNew />} />
+            <Route path="/recover-account" element={<RecoverAccount />} />
+            <Route path="/create-account" element={<CreateAccount />} />
+            <Route path="/import-account" element={<ImportAccount />} />
+          </Routes>
+        </Box>
       </div>
     </ThemeProvider>
   );

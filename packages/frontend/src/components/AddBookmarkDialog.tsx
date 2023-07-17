@@ -54,7 +54,7 @@ const AddBookmarkDialog = (props: ConfirmationDialogRawProps) => {
     return (
 
         <Dialog
-            sx={{ '& .MuiDialog-paper': { width: '80%', maxHeight: 435 } }}
+            sx={{ '& .MuiDialog-paper': { width: '80%', maxHeight: 435, marginLeft: "20px" } }}
             maxWidth="xs"
             TransitionProps={{ onEntering: handleEntering }}
             open={true}

@@ -67,6 +67,7 @@ function RecoverAccount() {
             flexDirection: 'column',
             alignItems: 'center',
             padding: `2px 3px 3px`,
+            borderRadius: `18px`,
             height: '100%',
             width: '90%'
 
@@ -95,7 +96,7 @@ function RecoverAccount() {
               disabled={
                 typedSeed.split(" ").length !== 12 || typedSeed.slice(-1) === " " || !validPassword(password)
               }
-              sx={{ margin: "10px 0", padding: "0 15px", width: '80%' }}
+              sx={{ marginBottom: "10px", marginTop: "22px", padding: "0 15px", width: '80%' }}
               variant="outlined"
               onClick={() => recoverWallet()}
             >
@@ -106,7 +107,7 @@ function RecoverAccount() {
           <Button
             onClick={() => navigate('/wallet')}
             variant="outlined"
-            sx={{ marginTop: "25px", padding: "0", width: '70%' }}
+            sx={{ marginTop: "26px", padding: "0", width: '70%' }}
           >
             Unlock
           </Button>

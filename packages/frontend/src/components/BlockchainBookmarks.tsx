@@ -68,8 +68,8 @@ const BlockchainBookmarks = () => {
         if (folderId) {
             tabBookmarks.find(folder => {
                 if (folder.folderId === folderId) {
-                    
-                    name =  folder.name
+
+                    name = folder.name
                 }
             })
         }
@@ -121,7 +121,7 @@ const BlockchainBookmarks = () => {
                     {selectedFolder && view === "folder-bookmarks" ?
                         <Box sx={{ display: "flex", alignItems: "center" }}>
                             <IconButton onClick={() => setView("folder")} sx={{ marginRight: "4px" }} size='medium'>
-                                <ArrowBackIosNewOutlinedIcon sx={{ fontSize: "1rem" }}/>
+                                <ArrowBackIosNewOutlinedIcon sx={{ fontSize: "1rem" }} />
                             </IconButton>
                             <MenuItem sx={{ minHeight: "22px", height: "max-content", padding: "4px 6px", borderRadius: "6px", marginRight: "4px", backgroundImage: view === 'folder-bookmarks' ? `linear-gradient(rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.05))` : 'none' }} >{getFolderName(selectedFolder)}</MenuItem>
                         </Box> :
@@ -148,12 +148,13 @@ const BlockchainBookmarks = () => {
                 {
                     open && <AddFolderDialog handleClose={() => setOpen(false)} handleAdd={setFolderName} />
                 }
-                {
-                    openAddBookmark && <AddBookmarkDialog handleClose={() => setOpenAddBookmark(false)}
-                        handleAdd={handleAddBookmark} />
-                }
+
 
             </ContentLayout>
+            {
+                openAddBookmark && <AddBookmarkDialog handleClose={() => setOpenAddBookmark(false)}
+                    handleAdd={handleAddBookmark} />
+            }
         </MainLayout>
     )
 }

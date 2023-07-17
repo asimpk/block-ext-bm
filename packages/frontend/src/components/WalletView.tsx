@@ -7,7 +7,6 @@ import { useWeb3 } from "../contexts/Web3Context/Web3Context";
 import { Box, Button, Container, FormControl, IconButton, Input, InputLabel, List, ListItem, ListItemButton, ListItemText, Paper, Tab, Tabs, TextField, Tooltip, Typography } from "@mui/material";
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import CustomScrollbar from "./CustomScrollbar";
-import PasswordModal from "./Modals/PasswordModal";
 
 
 
@@ -35,6 +34,7 @@ function TabPanel(props: TabPanelProps) {
     >
       {value === index && (
         <Paper sx={{
+          borderRadius: "18px",
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -169,7 +169,7 @@ function WalletView({
   }, [selectedChain]);
 
   const handleChange = (event: React.SyntheticEvent, newValue: string) => {
-    if(parseInt(newValue) !== 2 && showPrivateKey){
+    if (parseInt(newValue) !== 2 && showPrivateKey) {
       setShowPrivateKey(false)
       setPassword("")
     }
@@ -179,14 +179,14 @@ function WalletView({
 
   const submitHandle = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if(password){
-        const isPrivateKey = await getPrivateKey(password);
-        setShowPasswordModal(false)
-        if(isPrivateKey){
-          setShowPrivateKey(true)
-        }
+    if (password) {
+      const isPrivateKey = await getPrivateKey(password);
+      setShowPasswordModal(false)
+      if (isPrivateKey) {
+        setShowPrivateKey(true)
+      }
     }
-}
+  }
 
   return (
     <>
@@ -295,36 +295,36 @@ function WalletView({
 
             }
             {
-              showPrivateKey && <Tooltip title={publicAddress}>
-                <Typography sx={{ width: "80%", wordWrap: "break-word", marginTop: 1 }}>
-                  {Wallet && Wallet?.privateKey}
-                </Typography>
-              </Tooltip>
+              showPrivateKey &&
+              <Typography sx={{ width: "80%", wordWrap: "break-word", marginTop: 1 }}>
+                {Wallet && Wallet?.privateKey}
+              </Typography>
+
             }
 
           </Container>
           {
             showPasswordModal && <>
-            <form onSubmit={(e) => submitHandle(e)} style={{ width: '100%', display: "flex", flexDirection: "column",  alignItems: "center" }}>
+              <form onSubmit={(e) => submitHandle(e)} style={{ width: '100%', display: "flex", flexDirection: "column", alignItems: "center" }}>
                 <FormControl margin="normal" required fullWidth sx={{ width: "80%" }}>
-                    <InputLabel htmlFor="password">Password</InputLabel>
-                    <Input
-                        name="password"
-                        type="password"
-                        id="password"
-                        autoComplete="current-password"
-                        value={password}
-                        onChange={e => setPassword(e.target.value)}
-                    />
+                  <InputLabel htmlFor="password">Password</InputLabel>
+                  <Input
+                    name="password"
+                    type="password"
+                    id="password"
+                    autoComplete="current-password"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                  />
                 </FormControl>
                 <Button
-                    type="submit"
-                    variant="outlined"
-                    sx={{ margin: "10px 0", padding: "0 15px", width: '80%' }}
+                  type="submit"
+                  variant="outlined"
+                  sx={{ margin: "10px 0", padding: "0 15px", width: '80%' }}
                 >
-                    Confirm
+                  Confirm
                 </Button>
-            </form>
+              </form>
             </>
 
           }

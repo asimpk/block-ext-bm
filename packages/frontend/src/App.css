@@ -2,10 +2,10 @@
   text-align: center;
   width: 560px;
   height: 600px;
-  justify-content: flex-start;
-  align-items: center;
+  /* justify-content: flex-start;
+  align-items: center; */
   display: flex;
-  flex-direction: column;
+  /* flex-direction: column; */
 }
 
 .frontPageLogo {

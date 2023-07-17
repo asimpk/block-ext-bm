@@ -21,20 +21,21 @@ const WalletNew = () => {
   console.log("publicAddress", publicAddress)
   return (
     <MainLayout>
-      <HeaderLayout sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-      <IconButton sx={{ visibility: 'hidden' }}>
+      <HeaderLayout sx={{ display: 'flex', alignItems: 'center', justifyContent: (publicAddress && Wallet) ? 'space-between' : "center" }}>
+        {(publicAddress && Wallet) && <IconButton sx={{ visibility: 'hidden' }}>
           <LogoutOutlinedIcon />
         </IconButton>
+        }
         <Typography component="h1" variant="h5">
           Wallet
         </Typography>
-        {(publicAddress && Wallet) && 
-        <Tooltip title={'Lock'}>
-        <IconButton onClick={disconnectWallet}>
-          <LogoutOutlinedIcon />
-        </IconButton>
-        </Tooltip>}
-        
+        {(publicAddress && Wallet) &&
+          <Tooltip title={'Lock'}>
+            <IconButton onClick={disconnectWallet}>
+              <LogoutOutlinedIcon />
+            </IconButton>
+          </Tooltip>}
+
       </HeaderLayout>
       <ContentLayout>
         {

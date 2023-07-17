@@ -33,6 +33,7 @@ const SignIn = () => {
                 flexDirection: 'column',
                 alignItems: 'center',
                 padding: `2px 3px 3px`,
+                borderRadius: `18px`,
                 height: '100%',
                 width: '90%'
 
@@ -56,24 +57,16 @@ const SignIn = () => {
                     <Button
                         type="submit"
                         variant="outlined"
-                        sx={{ margin: "10px 0", padding: "0 15px", width: '100%' }}
+                        sx={{ marginBottom: "10px", marginTop: "22px", padding: "0 15px", width: '100%' }}
                     >
                         Unlock
                     </Button>
                 </form>
             </Paper>
-
-            {/* <Button
-                onClick={() => navigate('/recover-account')}
-                variant="outlined"
-
-            >
-                Recover
-            </Button> */}
             <Button
                 onClick={() => navigate('/create-account')}
                 variant="outlined"
-                sx={{ marginTop: "25px", padding: "0", width: '71%' }}
+                sx={{ marginTop: "26px", padding: "0", width: '71%' }}
             >
                 Create
             </Button>

@@ -59,6 +59,7 @@ function CreateAccount() {
             flexDirection: 'column',
             alignItems: 'center',
             padding: `2px 3px 3px`,
+            borderRadius: `18px`,
             height: '100%',
             width: '90%'
 
@@ -89,7 +90,7 @@ function CreateAccount() {
               newSeedPhrase.split(" ").length !== 12 || newSeedPhrase.slice(-1) === " " || !validPassword(password)
             }
               variant="outlined"
-              sx={{ margin: "10px 0", padding: "0 15px", width: '80%' }}
+              sx={{ marginBottom: "10px",marginTop: "22px", padding: "0 15px", width: '80%' }}
               onClick={() => setWalletAndMnemonic()}
             >
               Open Your New Wallet
@@ -98,7 +99,7 @@ function CreateAccount() {
           <Button
             onClick={() => navigate('/wallet')}
             variant="outlined"
-            sx={{ marginTop: "25px", padding: "0", width: '70%' }}
+            sx={{ marginTop: "26px", padding: "0", width: '70%' }}
           >
             Unlock
           </Button>
