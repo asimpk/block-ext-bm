@@ -128,6 +128,16 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
             const privateKey = privateAccount;
             console.log("privateKey1", privateKey)
             const WalletTemp = new ethers.Wallet(privateKey, provider);
+
+            const contractsData: ContractData[] = [
+                // Add contract ABIs and addresses here
+                {
+                    abi: tabBookmarksAbi,
+                    address: '0x5FbDB2315678afecb367f032d93F642f64180aa3'
+                }
+            ];
+           
+            
             const publicKey = WalletTemp?.address;
             const buffer = await window.crypto.subtle.exportKey('raw', wrappingKey);
             const sessionkey = arrayBufferToBase64String(buffer);
@@ -135,9 +145,11 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
             const userSaltString = uint8ArrayToBase64(userSalt)
             await chrome.storage.local.set({ encryptMnemonicStore, passwordHash, wrappedKeyString, userSalt: userSaltString })
             chrome.storage.session.set({ sessionkey }).then(async () => {
+                const contracts = await getContractInstances(WalletTemp, contractsData);
                 setUnWrappedKey(unWrappedKey)
                 setPublicAddress(publicKey)
                 setWallet(WalletTemp)
+                setContractInstances(contracts)
                 navigate("/wallet")
             })
         } else {
@@ -154,6 +166,13 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
             const privateKey = ethers.Wallet.fromMnemonic(seedPhrase).privateKey;
             console.log("privateKey2", privateKey)
             const WalletTemp = new ethers.Wallet(privateKey, provider);
+            const contractsData: ContractData[] = [
+                // Add contract ABIs and addresses here
+                {
+                    abi: tabBookmarksAbi,
+                    address: '0x5FbDB2315678afecb367f032d93F642f64180aa3'
+                }
+            ];
             const publicKey = WalletTemp?.address;
             const buffer = await window.crypto.subtle.exportKey('raw', wrappingKey);
             const sessionkey = arrayBufferToBase64String(buffer);
@@ -161,9 +180,11 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
             const userSaltString = uint8ArrayToBase64(userSalt)
             await chrome.storage.local.set({ encryptMnemonicStore, passwordHash, wrappedKeyString, userSalt: userSaltString })
             chrome.storage.session.set({ sessionkey }).then(async () => {
+                const contracts = await getContractInstances(WalletTemp, contractsData);
                 setUnWrappedKey(unWrappedKey)
                 setPublicAddress(publicKey)
                 setWallet(WalletTemp)
+                setContractInstances(contracts)
                 navigate("/wallet")
             })
         }
@@ -261,13 +282,22 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
             console.log("privateKeySignIn", privateKey)
             // const privateKey = decryptedMnemonic;
             const WalletTemp = new ethers.Wallet(privateKey, provider);
+            const contractsData: ContractData[] = [
+                // Add contract ABIs and addresses here
+                {
+                    abi: tabBookmarksAbi,
+                    address: '0x5FbDB2315678afecb367f032d93F642f64180aa3'
+                }
+            ];
             const publicKey = WalletTemp?.address;
             const buffers = await window.crypto.subtle.exportKey('raw', wrappingKey);
             const sessionkey = arrayBufferToBase64String(buffers);
             chrome.storage.session.set({ sessionkey }).then(async () => {
+                const contracts = await getContractInstances(WalletTemp, contractsData);
                 setUnWrappedKey(unWrappedKey)
                 setPublicAddress(publicKey)
                 setWallet(WalletTemp)
+                setContractInstances(contracts)
                 navigate("/wallet")
             })
         } else {

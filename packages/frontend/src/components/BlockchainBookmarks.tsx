@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from "react-router-dom";
 import CreateNewFolderOutlinedIcon from '@mui/icons-material/CreateNewFolderOutlined';
 import ContentLayout from './Layouts/ContentLayout'
 import HeaderLayout from './Layouts/HeaderLayout'
 import MainLayout from './Layouts/MainLayout'
-import { Box, IconButton, MenuItem, Typography } from '@mui/material'
+import { Box, Button, IconButton, MenuItem, Typography } from '@mui/material'
 import BlockchainBookmarkCard from './Cards/BlockchainBookmarkCard'
 import BookmarkAddOutlinedIcon from '@mui/icons-material/BookmarkAddOutlined';
 import ArrowBackIosNewOutlinedIcon from '@mui/icons-material/ArrowBackIosNewOutlined';
@@ -18,10 +19,11 @@ const BlockchainBookmarks = () => {
     const [open, setOpen] = useState(false);
     const [openAddBookmark, setOpenAddBookmark] = useState(false)
     const [selectedFolder, setSelectedFolder] = useState("")
+    const navigate = useNavigate();
     const [view, setView] = useState<"folder" | "bookmarks" | "folder-bookmarks">("folder")
     const { tabBookmarks, allBookmarks } = useAppState()
     const { activeTab } = useAddBookmarkBtn()
-    const { createFolder, deleteFolder, updateFolder, addBookmark } = useWeb3()
+    const { createFolder, deleteFolder, updateFolder, addBookmark, publicAddress, Wallet } = useWeb3()
 
 
 
@@ -112,49 +114,66 @@ const BlockchainBookmarks = () => {
         <MainLayout>
             <HeaderLayout>
                 <Typography component="h1" variant="h5">
-                    Blockchain Bookmarks
+                    Bookmarks
                 </Typography>
             </HeaderLayout>
-            <ContentLayout>
-                <div style={{ display: 'flex', width: '100%', justifyContent: "space-between", alignItems: 'center' }}>
-
-                    {selectedFolder && view === "folder-bookmarks" ?
-                        <Box sx={{ display: "flex", alignItems: "center" }}>
-                            <IconButton onClick={() => setView("folder")} sx={{ marginRight: "4px" }} size='medium'>
-                                <ArrowBackIosNewOutlinedIcon sx={{ fontSize: "1rem" }} />
-                            </IconButton>
-                            <MenuItem sx={{ minHeight: "22px", height: "max-content", padding: "4px 6px", borderRadius: "6px", marginRight: "4px", backgroundImage: view === 'folder-bookmarks' ? `linear-gradient(rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.05))` : 'none' }} >{getFolderName(selectedFolder)}</MenuItem>
-                        </Box> :
-                        <Box sx={{ display: "flex" }}>
-                            <MenuItem onClick={() => setView("folder")} sx={{ minHeight: "22px", height: "max-content", padding: "4px 6px", borderRadius: "6px", marginRight: "4px", backgroundImage: view === 'folder' ? `linear-gradient(rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.05))` : 'none' }} >Folders</MenuItem>
-                            <MenuItem onClick={() => setView("bookmarks")} sx={{ minHeight: "22px", height: "max-content", padding: "4px 6px", borderRadius: "6px", marginRight: "4px", backgroundImage: view === 'bookmarks' ? `linear-gradient(rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.05))` : 'none' }}>All Bookmarks</MenuItem>
-                        </Box>
-                    }
-
-                    <Box>
-                        <IconButton onClick={() => setOpenAddBookmark(true)}>
-                            <BookmarkAddOutlinedIcon />
-                        </IconButton>
-                        <IconButton onClick={() => setOpen(true)}>
-                            <CreateNewFolderOutlinedIcon />
-                        </IconButton>
-                    </Box>
-
-                </div>
-                {
-
-                    getView(view)
-                }
-                {
-                    open && <AddFolderDialog handleClose={() => setOpen(false)} handleAdd={setFolderName} />
-                }
-
-
-            </ContentLayout>
             {
-                openAddBookmark && <AddBookmarkDialog handleClose={() => setOpenAddBookmark(false)}
-                    handleAdd={handleAddBookmark} />
+                (publicAddress && Wallet) ?
+
+                    <ContentLayout>
+                        <div style={{ display: 'flex', width: '100%', justifyContent: "space-between", alignItems: 'center' }}>
+
+                            {selectedFolder && view === "folder-bookmarks" ?
+                                <Box sx={{ display: "flex", alignItems: "center" }}>
+                                    <IconButton onClick={() => setView("folder")} sx={{ marginRight: "4px" }} size='medium'>
+                                        <ArrowBackIosNewOutlinedIcon sx={{ fontSize: "1rem" }} />
+                                    </IconButton>
+                                    <MenuItem sx={{ minHeight: "22px", height: "max-content", padding: "4px 6px", borderRadius: "6px", marginRight: "4px", backgroundImage: view === 'folder-bookmarks' ? `linear-gradient(rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.05))` : 'none' }} >{getFolderName(selectedFolder)}</MenuItem>
+                                </Box> :
+                                <Box sx={{ display: "flex" }}>
+                                    <MenuItem onClick={() => setView("folder")} sx={{ minHeight: "22px", height: "max-content", padding: "4px 6px", borderRadius: "6px", marginRight: "4px", backgroundImage: view === 'folder' ? `linear-gradient(rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.05))` : 'none' }} >Folders</MenuItem>
+                                    <MenuItem onClick={() => setView("bookmarks")} sx={{ minHeight: "22px", height: "max-content", padding: "4px 6px", borderRadius: "6px", marginRight: "4px", backgroundImage: view === 'bookmarks' ? `linear-gradient(rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.05))` : 'none' }}>All Bookmarks</MenuItem>
+                                </Box>
+                            }
+
+                            <Box>
+                                <IconButton onClick={() => setOpenAddBookmark(true)}>
+                                    <BookmarkAddOutlinedIcon />
+                                </IconButton>
+                                <IconButton onClick={() => setOpen(true)}>
+                                    <CreateNewFolderOutlinedIcon />
+                                </IconButton>
+                            </Box>
+
+                        </div>
+                        {
+
+                            getView(view)
+                        }
+                        {
+                            open && <AddFolderDialog handleClose={() => setOpen(false)} handleAdd={setFolderName} />
+                        }
+                        {
+                            openAddBookmark && <AddBookmarkDialog handleClose={() => setOpenAddBookmark(false)}
+                                handleAdd={handleAddBookmark} />
+                        }
+
+                    </ContentLayout> :
+                    <Box sx={{ display: 'flex', width: '100%', justifyContent: "center", alignItems: 'center', flexDirection: "column", height: "70%" }}>
+                        <Typography component="h1" variant="h6">
+                            Please connect Wallet to use this Feature!
+                        </Typography>
+                        <Button
+                            onClick={() => navigate('/')}
+                            variant="outlined"
+                            sx={{ marginTop: "26px", padding: "0", width: '60%' }}
+                        >
+                            CONNECT WALLET
+                        </Button>
+                    </Box>
             }
+
+
         </MainLayout>
     )
 }

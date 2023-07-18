@@ -262,10 +262,9 @@ function WalletView({
                   }
                   key={activity.transactionHash}
                 >
-                  <ListItemText
-                    primary={activity.methodName}
-                    sx={{ fontSize: '14px !important' }}
-                  />
+                  <ListItemText>
+                    <Typography variant="body1" sx={{ fontSize: '12px' }}>{activity.methodName}</Typography>
+                  </ListItemText>
                 </ListItem>
               })
             }
@@ -274,11 +273,11 @@ function WalletView({
         </TabPanel>
         <TabPanel value={value} index={2}>
           <Container sx={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '10px 0px' }}>
-            {/* <Typography component="h1" variant="h6">
-              Wallet Address
-            </Typography> */}
+            <Typography component="h1" variant="h6">
+              Account
+            </Typography>
             <Tooltip title={publicAddress}>
-              <Typography sx={{ width: "80%", wordWrap: "break-word", marginTop: 1 }}>
+              <Typography sx={{ width: "90%", wordWrap: "break-word", marginTop: 1 }}>
                 {publicAddress}
               </Typography>
             </Tooltip>
@@ -288,7 +287,7 @@ function WalletView({
               (!showPasswordModal && !showPrivateKey) && <Button
                 onClick={() => setShowPasswordModal(true)}
                 variant="outlined"
-                sx={{ marginTop: "30px", padding: "0", width: '85%' }}
+                sx={{ marginTop: "30px", padding: "0", width: '90%' }}
               >
                 Show Private Key
               </Button>
@@ -296,7 +295,7 @@ function WalletView({
             }
             {
               showPrivateKey &&
-              <Typography sx={{ width: "80%", wordWrap: "break-word", marginTop: 1 }}>
+              <Typography sx={{ width: "90%", wordWrap: "break-word", marginTop: 1 }}>
                 {Wallet && Wallet?.privateKey}
               </Typography>
 
@@ -306,7 +305,7 @@ function WalletView({
           {
             showPasswordModal && <>
               <form onSubmit={(e) => submitHandle(e)} style={{ width: '100%', display: "flex", flexDirection: "column", alignItems: "center" }}>
-                <FormControl margin="normal" required fullWidth sx={{ width: "80%" }}>
+                <FormControl margin="normal" required fullWidth sx={{ width: "90%" }}>
                   <InputLabel htmlFor="password">Password</InputLabel>
                   <Input
                     name="password"
@@ -320,7 +319,7 @@ function WalletView({
                 <Button
                   type="submit"
                   variant="outlined"
-                  sx={{ margin: "10px 0", padding: "0 15px", width: '80%' }}
+                  sx={{ margin: "10px 0", padding: "0 15px", width: '90%' }}
                 >
                   Confirm
                 </Button>

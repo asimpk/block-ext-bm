@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import MainLayout from "./Layouts/MainLayout";
 import HeaderLayout from "./Layouts/HeaderLayout";
 import ContentLayout from "./Layouts/ContentLayout";
-import { CircularProgress, IconButton, Tooltip, Typography } from "@mui/material";
+import { Box, CircularProgress, IconButton, Tooltip, Typography } from "@mui/material";
 import LogoutOutlinedIcon from '@mui/icons-material/LogoutOutlined';
 import { useWeb3 } from "../contexts/Web3Context/Web3Context";
 import CreateAccount from "./CreateAccount";
@@ -35,15 +35,18 @@ const WalletNew = () => {
           </Tooltip>}
 
       </HeaderLayout>
-      <ContentLayout>
-        {
-          showLoading ?
+      {
+        showLoading ?
+
+          <Box sx={{ height: '100%', display: 'flex', justifyContent: "center", alignItems: "center" }}>
             <CircularProgress />
-            :
-            publicAddress ? <WalletView selectedChain="0x13881" /> : <SignIn />
-        }
-      </ContentLayout>
-    </MainLayout>
+          </Box>
+          :
+          <ContentLayout>
+            {publicAddress ? <WalletView selectedChain="0x13881" /> : <SignIn />}
+          </ContentLayout>
+      }
+    </MainLayout >
   );
 }
 

@@ -39,7 +39,9 @@ export const StateProvider: React.FC<{ children: any }> = ({ children }) => {
 
 
     useEffect(() => {
+        console.log("contractInstances1", contractInstances,Wallet)
         if (contractInstances && Wallet) {
+            console.log("contractInstances", contractInstances,Wallet)
             const blockListener = async (blockTag: number) => {
                 const { bookmarksByFolder, allBookmarks  } = await getState(contractInstances)
                 setTabBookmarks(bookmarksByFolder)
@@ -47,6 +49,7 @@ export const StateProvider: React.FC<{ children: any }> = ({ children }) => {
 
             };
             Wallet.provider.on("block", blockListener);
+            
         } else if (!Wallet) {
             setTabBookmarks([])
         }
