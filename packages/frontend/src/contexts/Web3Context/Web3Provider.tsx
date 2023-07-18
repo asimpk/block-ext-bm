@@ -25,6 +25,7 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
     const [showConfirm, setShowConfirm] = useState(false)
     const [transaction, setTransaction] = useState<{ transaction: ethers.providers.TransactionRequest, method: string }>()
     const [status, setStatus] = useState('idle');
+    const [showLoading, setShowLoading] = useState(true)
     const navigate = useNavigate();
 
 
@@ -87,11 +88,11 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
                     ];
                     const contracts = await getContractInstances(WalletTemp, contractsData);
                     setContractInstances(contracts)
-                    navigate("/wallet")
-                } else {
-                    navigate("/signin")
+                    navigate("/wallet");
+                    
                 }
             }
+            setShowLoading(false)
         });
     }, [])
 
@@ -233,7 +234,7 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
             setPublicAddress(undefined)
             setWallet(undefined)
             console.log("disconnectWallet", "success")
-            navigate("/wallet")
+            navigate("/")
         }).catch(error => {
             console.log("disconnectWallet", "error")
         });
@@ -502,6 +503,7 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
         Wallet: wallet,
         publicAddress,
         contractInstances,
+        showLoading,
         showConfirm,
         userSignIn,
         getPrivateKey,

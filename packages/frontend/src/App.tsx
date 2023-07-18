@@ -25,7 +25,7 @@ import { useWeb3 } from './contexts/Web3Context/Web3Context';
 import { useAppState } from './contexts/StateConrext/StateContext';
 // import BookMarks from './components/BookMarks';
 import useAddBookmarkBtn from './hooks/useAddBookmarkBtn';
-import { Alert, Box, Card, Container, Divider, Drawer, IconButton, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Paper, Snackbar, Typography } from '@mui/material';
+import { Alert, Box, Card, CircularProgress, Container, Divider, Drawer, IconButton, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Paper, Snackbar, Typography } from '@mui/material';
 import Home from './components/Home';
 import BlockchainBookmarks from './components/BlockchainBookmarks';
 import CustomScrollbar from './components/CustomScrollbar';
@@ -48,7 +48,7 @@ const darkTheme = createTheme({
 
 function App() {
   const { showAddBookMarkBtn, activeTab, addBookMark } = useAddBookmarkBtn()
-  const { showConfirm, status } = useWeb3()
+  const { showConfirm, status, showLoading, publicAddress, Wallet } = useWeb3()
   const navigate = useNavigate();
 
 
@@ -86,8 +86,6 @@ function App() {
             </Alert>
           </Snackbar>}
 
-
-
         <Paper
           sx={{ display: "flex", flexDirection: "column", width: "60px" }}
         >
@@ -98,36 +96,51 @@ function App() {
               </ListItemIcon>
             </ListItemButton>
           </List>
-          <List sx={{ flex: "1", padding: "11px 0 0 0" }}>
-            <Divider />
-            <ListItemButton key={3} onClick={() => navigate("/blockchain-bookmarks")}>
-              <ListItemIcon sx={{ minWidth: 40 }}>
-                <BookmarksOutlinedIcon />
-              </ListItemIcon>
-            </ListItemButton>
-          </List>
-          <List sx={{ maxWidth: 60 }}>
-            <ListItemButton key={6} onClick={() => navigate("/wallet")}>
-              <ListItemIcon sx={{ minWidth: 40 }}>
-                <AccountCircleOutlinedIcon />
-              </ListItemIcon>
-            </ListItemButton>
-          </List>
+          {
+            (publicAddress && Wallet) &&
+            <>
+              <List sx={{ flex: "1", padding: "11px 0 0 0" }}>
+                <Divider />
+                <ListItemButton key={3} onClick={() => navigate("/blockchain-bookmarks")}>
+                  <ListItemIcon sx={{ minWidth: 40 }}>
+                    <BookmarksOutlinedIcon />
+                  </ListItemIcon>
+                </ListItemButton>
+              </List>
+              <List sx={{ maxWidth: 60 }}>
+                <ListItemButton key={6} onClick={() => navigate("/wallet")}>
+                  <ListItemIcon sx={{ minWidth: 40 }}>
+                    <AccountCircleOutlinedIcon />
+                  </ListItemIcon>
+                </ListItemButton>
+              </List>
+            </>
+          }
         </Paper>
         <Box
           sx={{ flex: "1" }}
         >
           <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/blockchain-bookmarks" element={<BlockchainBookmarks />} />
-            <Route path="/blockchain-bookmarks/:folderId" element={<FolderBookmarks />} />
-            <Route path="/blockchain-bookmarks/:folderId/:bookmarkId" element={<BlockchainBookmarkDetail />} />
-            <Route path="/community-bookmarks" element={<CommunityBookmarks />} />
-            <Route path="/wallet" element={<WalletNew />} />
+            <Route path="/" element={<WalletNew />} />
             <Route path="/recover-account" element={<RecoverAccount />} />
             <Route path="/create-account" element={<CreateAccount />} />
             <Route path="/import-account" element={<ImportAccount />} />
+            <Route path="/wallet" element={<WalletNew />} />
           </Routes>
+
+          {
+
+            (publicAddress && Wallet) &&
+            <Routes>
+              <Route path="/blockchain-bookmarks" element={<BlockchainBookmarks />} />
+              <Route path="/blockchain-bookmarks/:folderId" element={<FolderBookmarks />} />
+              <Route path="/blockchain-bookmarks/:folderId/:bookmarkId" element={<BlockchainBookmarkDetail />} />
+              <Route path="/community-bookmarks" element={<CommunityBookmarks />} />
+            </Routes>
+
+          }
+
+
         </Box>
       </div>
     </ThemeProvider>

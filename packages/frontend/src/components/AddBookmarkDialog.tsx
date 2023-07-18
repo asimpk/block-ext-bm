@@ -13,6 +13,7 @@ import Radio from '@mui/material/Radio';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import CustomScrollbar from './CustomScrollbar';
 import { useAppState } from '../contexts/StateConrext/StateContext';
+import { Typography } from '@mui/material';
 
 const options = [
     'None',
@@ -54,24 +55,22 @@ const AddBookmarkDialog = (props: ConfirmationDialogRawProps) => {
     return (
 
         <Dialog
-            sx={{ '& .MuiDialog-paper': { width: '80%', maxHeight: 435, marginLeft: "20px" } }}
+            sx={{ '& .MuiDialog-paper': { width: '70%', maxHeight: 435, marginLeft: "90px", borderRadius: "18px" } }}
             maxWidth="xs"
             TransitionProps={{ onEntering: handleEntering }}
             open={true}
         >
-            <DialogTitle>Select Folder</DialogTitle>
-
+            <Typography component="h1" variant="h6" sx={{ padding: "10px 30px" }}>Select Folder</Typography>
             <DialogContent dividers sx={{ height: 200 }}>
                 <CustomScrollbar>
-                    {/* <div> */}
                     <RadioGroup
                         ref={radioGroupRef}
                         aria-label="ringtone"
                         name="ringtone"
                         value={value}
                         onChange={handleChange}
+                        sx={{ ml: "12px" }}
                     >
-                        {/* <CustomScrollbar> */}
                         {tabBookmarks.map((option) => (
                             <FormControlLabel
                                 value={option.folderId}
@@ -79,21 +78,17 @@ const AddBookmarkDialog = (props: ConfirmationDialogRawProps) => {
                                 control={<Radio />}
                                 label={option.name}
                             />
-
                         ))}
-
-
                     </RadioGroup>
-                    {/* </div> */}
                 </CustomScrollbar>
 
             </DialogContent>
 
             <DialogActions>
-                <Button autoFocus onClick={handleClose}>
+                <Button variant='outlined' autoFocus onClick={handleClose}>
                     Cancel
                 </Button>
-                <Button onClick={() => handleAdd(value)}>Ok</Button>
+                <Button variant='outlined' onClick={() => handleAdd(value)}>Ok</Button>
             </DialogActions>
         </Dialog>
     );

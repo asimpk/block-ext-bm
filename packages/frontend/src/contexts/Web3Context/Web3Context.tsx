@@ -5,6 +5,7 @@ type Web3ContextType = {
     Wallet: Wallet | undefined;
     publicAddress: string | undefined;
     contractInstances: ethers.Contract[]  | null,
+    showLoading: boolean,
     showConfirm: boolean,
     status: string,
     connectWallet: (password: string, seedPhrase: string, privateAccount?: string) => void;
