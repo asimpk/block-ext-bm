@@ -34,11 +34,13 @@ const options = [
 
 export interface ConfirmationDialogRawProps {
     handleClose: () => void
-    handleAdd: (folderName: string) => void
+    handleAdd: (folderName: string) => void,
+    handleShowFolder: () => void,
+    exemptFolderId?: string
 }
 
 const AddBookmarkDialog = (props: ConfirmationDialogRawProps) => {
-    const { handleClose, handleAdd } = props;
+    const { handleClose, handleAdd, handleShowFolder, exemptFolderId } = props;
     const [value, setValue] = React.useState("");
     const radioGroupRef = React.useRef<HTMLElement>(null);
     const { tabBookmarks } = useAppState()
@@ -52,6 +54,8 @@ const AddBookmarkDialog = (props: ConfirmationDialogRawProps) => {
         setValue((event.target as HTMLInputElement).value);
     };
 
+    const filtertabBookmarks = exemptFolderId ? tabBookmarks.filter(tab => tab?.folderId !== exemptFolderId) : tabBookmarks;
+
     return (
 
         <Dialog
@@ -62,26 +66,33 @@ const AddBookmarkDialog = (props: ConfirmationDialogRawProps) => {
         >
             <Typography component="h1" variant="h6" sx={{ padding: "10px 30px" }}>Select Folder</Typography>
             <DialogContent dividers sx={{ height: 200 }}>
-                <CustomScrollbar>
-                    <RadioGroup
-                        ref={radioGroupRef}
-                        aria-label="ringtone"
-                        name="ringtone"
-                        value={value}
-                        onChange={handleChange}
-                        sx={{ ml: "12px" }}
-                    >
-                        {tabBookmarks.map((option) => (
-                            <FormControlLabel
-                                value={option.folderId}
-                                key={option.folderId}
-                                control={<Radio />}
-                                label={option.name}
-                            />
-                        ))}
-                    </RadioGroup>
-                </CustomScrollbar>
-
+                {
+                    filtertabBookmarks?.length > 0 ?
+                        <CustomScrollbar>
+                            <RadioGroup
+                                ref={radioGroupRef}
+                                aria-label="ringtone"
+                                name="ringtone"
+                                value={value}
+                                onChange={handleChange}
+                                sx={{ ml: "12px" }}
+                            >
+                                {filtertabBookmarks.map((option) => (
+                                    <FormControlLabel
+                                        value={option.folderId}
+                                        key={option.folderId}
+                                        control={<Radio />}
+                                        label={option.name}
+                                    />
+                                ))}
+                            </RadioGroup>
+                        </CustomScrollbar> :
+                        <Box sx={{ height: '100%', display: "flex", justifyContent: 'center', alignItems: 'center' }}>
+                            <Button variant='outlined' autoFocus onClick={handleShowFolder}>
+                                Please Add Folder first!
+                            </Button>
+                        </Box>
+                }
             </DialogContent>
 
             <DialogActions>

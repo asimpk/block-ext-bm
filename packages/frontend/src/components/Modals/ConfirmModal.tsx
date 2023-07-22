@@ -10,7 +10,7 @@ import { Typography } from '@mui/material';
 
 
 const ConfirmModal: React.FC = () => {
-    const { closeConfirmModal, confirmTransaction } = useWeb3()
+    const { transaction, closeConfirmModal, confirmTransaction } = useWeb3()
     return (
 
         <Dialog
@@ -20,8 +20,14 @@ const ConfirmModal: React.FC = () => {
         >
             <Typography component="h1" variant="h6" sx={{ padding: "10px 30px" }}>Confirm Transaction</Typography>
             <DialogContent dividers>
-                <Box component="form" sx={{ display: 'flex', flexWrap: 'wrap' }}>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: "space-between" }}>
+                    <Typography variant="body1">Gas (estimated)</Typography>
+                    <Typography variant="body1">{transaction?.totalCost &&  parseFloat(transaction.totalCost).toFixed(12)}ETH</Typography>
+                </Box>
 
+                <Box sx={{ display: 'flex', flexDirection: "column", alignItems: 'center', marginTop: '20px' }}>
+                    <Typography variant="h6">Total Cost</Typography>
+                    <Typography variant="h5" sx={{ padding: "10px" }}>{transaction?.totalCost &&  parseFloat(transaction.totalCost).toFixed(12)}ETH</Typography>
                 </Box>
             </DialogContent>
             <DialogActions>

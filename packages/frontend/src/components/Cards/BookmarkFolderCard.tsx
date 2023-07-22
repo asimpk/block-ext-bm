@@ -1,6 +1,6 @@
 import React from 'react'
 import { useNavigate } from "react-router-dom";
-import { Card, IconButton, Menu, MenuItem, Tooltip, Typography } from '@mui/material'
+import { Box, Card, IconButton, Menu, MenuItem, Tooltip, Typography } from '@mui/material'
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 
 
@@ -12,7 +12,7 @@ type BookMarksType = {
     selectFolder: (folderId: string) => void,
 }
 
-const BookmarkFolderCard: React.FC<BookMarksType> = ({ bookmarkFolder,selectFolder, deleteFolder, updateFolder }) => {
+const BookmarkFolderCard: React.FC<BookMarksType> = ({ bookmarkFolder, selectFolder, deleteFolder, updateFolder }) => {
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 
 
@@ -53,8 +53,7 @@ const BookmarkFolderCard: React.FC<BookMarksType> = ({ bookmarkFolder,selectFold
         }}
             onClick={() => selectFolder(bookmarkFolder?.folderId)}
         >
-            <div style={{ display: 'flex', justifyContent: 'flex-end' }} className='actions' onClick={handleClick}>
-                {/* <Tooltip title={'Share With Community'}> */}
+            <Box style={{ display: 'flex', justifyContent: 'flex-end', width: "fit-content", marginLeft: 'auto' }} className='actions' onClick={handleClick}>
                 <IconButton aria-label="share" size="small" style={{ width: 'fit-content', fontSize: '0.8rem', padding: '5px 2px', marginRight: '2px' }}>
                     <MoreVertIcon fontSize='small' />
                 </IconButton>
@@ -66,17 +65,12 @@ const BookmarkFolderCard: React.FC<BookMarksType> = ({ bookmarkFolder,selectFold
                     anchorEl={anchorEl}
                     open={anchorEl ? true : false}
                     onClose={handleClose}
-
                 >
                     <MenuItem key={'delete'} onClick={(e) => handlerDelete(e, bookmarkFolder.folderId)} sx={{ minHeight: '22px', padding: '0px 16px' }}>
                         Delete
                     </MenuItem>
-                    {/* <MenuItem key={'delete'} onClick={(e) => handlerUpdate(e, bookmarkFolder.folderId)} sx={{ minHeight: '22px', padding: '0px 16px' }}>
-                        Update
-                    </MenuItem> */}
                 </Menu>
-                {/* </Tooltip> */}
-            </div>
+            </Box>
             <Tooltip title={`${bookmarkFolder?.name} contains ${bookmarkFolder.bookmarksCount} bookmarks`}>
                 <Typography
                     noWrap={true}

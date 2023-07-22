@@ -7,16 +7,18 @@ type Web3ContextType = {
     contractInstances: ethers.Contract[]  | null,
     showLoading: boolean,
     showConfirm: boolean,
+    transaction: { transaction: ethers.providers.TransactionRequest, method: string, totalCost: string | undefined } | undefined,
     status: string,
     connectWallet: (password: string, seedPhrase: string, privateAccount?: string) => void;
     disconnectWallet: () => void;
     userSignIn: (passphrase: string) => void;
     getPrivateKey: (passphrase: string) => Promise<boolean>;
-    encryptMessages: () => Promise<void>,
-    decryptMessages: () => Promise<void>,
+    getDcryptedString: (wallet: Wallet, encryptedString: string) => Promise<string>;
     createFolder: (folderName: string) => Promise<void>,
     deleteFolder: (folderId: string) => Promise<void>,
     updateFolder: (folderId: string) => Promise<void>,
+    deleteBookmark: (folderId: string, BookmarkId: string) => Promise<void>,
+    moveBookmark: (fromFolderId: string, toFolderId: string,  BookmarkId: string) => Promise<void>,
     closeConfirmModal: () => void,
     confirmTransaction: () => void,
     addBookmark: (folderId: string, url: string) => Promise<void>

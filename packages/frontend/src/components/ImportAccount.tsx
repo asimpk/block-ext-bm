@@ -3,24 +3,33 @@ import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { ethers } from "ethers";
 import { useWeb3 } from "../contexts/Web3Context/Web3Context";
-import { Alert, Button, Card, Container, FormControl, Input, InputLabel, Paper, Typography } from "@mui/material";
+import { Alert, Button, Card, Container, FormControl, IconButton, Input, InputAdornment, InputLabel, Paper, Typography } from "@mui/material";
 import MainLayout from "./Layouts/MainLayout";
 import HeaderLayout from "./Layouts/HeaderLayout";
 import ContentLayout from "./Layouts/ContentLayout";
+import { Visibility, VisibilityOff } from "@material-ui/icons";
 
 const ImportAccount = () => {
   const [newSeedPhrase, setNewSeedPhrase] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showPrivateKey, setShowPrivateKey] = useState(false);
   const [privateKey, setPrivateKey] = useState("")
   const navigate = useNavigate();
   const { connectWallet } = useWeb3()
 
-  function generateWallet() {
-    const mnemonic = ethers.Wallet.createRandom().mnemonic?.phrase ?? "";
-    setNewSeedPhrase(mnemonic)
-  }
 
-  //"0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
+  const handleClickShowPassword = () => setShowPassword((show) => !show);
+
+  const handleMouseDownPassword = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+  };
+
+  const handleClickShowPrivateKey = () => setShowPrivateKey((show) => !show);
+
+  const handleMouseDownPrivateKey = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+  };
 
   function setWalletAndMnemonic(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -67,9 +76,20 @@ const ImportAccount = () => {
                 <InputLabel htmlFor="private-key-password">Private Key</InputLabel>
                 <Input
                   name="private-key-password"
-                  type="password"
                   id="private-key-password"
-                  autoComplete="private-key-password"
+                  type={showPrivateKey ? 'text' : 'password'}
+                  endAdornment={
+                    <InputAdornment position="end">
+                      <IconButton
+                        aria-label="toggle password visibility"
+                        onClick={handleClickShowPrivateKey}
+                        onMouseDown={handleMouseDownPrivateKey}
+                      >
+                        {showPrivateKey ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  }
+                  autoComplete="current-password"
                   value={privateKey}
                   onChange={e => setPrivateKey(e.target.value)}
                 />
@@ -78,8 +98,19 @@ const ImportAccount = () => {
                 <InputLabel htmlFor="password">Set Password</InputLabel>
                 <Input
                   name="password"
-                  type="password"
                   id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  endAdornment={
+                    <InputAdornment position="end">
+                      <IconButton
+                        aria-label="toggle password visibility"
+                        onClick={handleClickShowPassword}
+                        onMouseDown={handleMouseDownPassword}
+                      >
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  }
                   autoComplete="current-password"
                   value={password}
                   onChange={e => setPassword(e.target.value)}

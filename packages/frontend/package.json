@@ -20,8 +20,6 @@
     "@types/react": "^18.2.6",
     "@types/react-custom-scrollbars": "^4.0.10",
     "@types/react-dom": "^18.2.4",
-    "@types/uuid": "^9.0.2",
-    "antd": "^5.5.0",
     "argon2-browser": "^1.18.0",
     "assert": "^2.0.0",
     "axios": "^1.4.0",
@@ -42,7 +40,6 @@
     "stream": "npm:stream-browserify",
     "typescript": "^4.9.5",
     "url": "^0.11.0",
-    "uuid": "^9.0.0",
     "web-vitals": "^2.1.4",
     "web3": "^1.10.0"
   },

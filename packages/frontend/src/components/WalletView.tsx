@@ -4,9 +4,10 @@ import { useNavigate } from "react-router-dom";
 import { CHAINS_CONFIG } from "../chains";
 import { ethers } from "ethers";
 import { useWeb3 } from "../contexts/Web3Context/Web3Context";
-import { Box, Button, Container, FormControl, IconButton, Input, InputLabel, List, ListItem, ListItemButton, ListItemText, Paper, Tab, Tabs, TextField, Tooltip, Typography } from "@mui/material";
+import { Box, Button, Container, FormControl, IconButton, Input, InputAdornment, InputLabel, List, ListItem, ListItemButton, ListItemText, Paper, Tab, Tabs, TextField, Tooltip, Typography } from "@mui/material";
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import CustomScrollbar from "./CustomScrollbar";
+import { Visibility, VisibilityOff } from "@material-ui/icons";
 
 
 
@@ -81,18 +82,21 @@ function WalletView({
   const [showPrivateKey, setShowPrivateKey] = useState(false)
   const [showPasswordModal, setShowPasswordModal] = useState(false)
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const { Wallet, publicAddress, getPrivateKey } = useWeb3()
 
 
+  const handleClickShowPassword = () => setShowPassword((show) => !show);
 
+  const handleMouseDownPassword = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+  };
 
   async function sendTransaction(to: string, amount: string) {
-
-
     const tx = {
-      to: to,
-      value: ethers.utils.parseEther(amount.toString()),
+      to,
+      value: ethers.utils.parseEther(amount),
     };
 
     setProcessing(true);
@@ -116,6 +120,7 @@ function WalletView({
       }
 
     } catch (err) {
+      console.log("err", err)
       setHash("");
       setProcessing(false);
       setAmountToSend("");
@@ -247,29 +252,32 @@ function WalletView({
 
         </TabPanel>
         <TabPanel value={value} index={1}>
-          <List>
+          {
+            accountActivities.length > 0 ?
+              <List>
+                {
+                  accountActivities.map(activity => {
+                    return <ListItem
+                      secondaryAction={
+                        <Tooltip title="View on block explorer">
+                          <IconButton edge="end" aria-label="delete" sx={{ margin: 0 }} size="small" onClick={() => window.open(`https://mumbai.polygonscan.com/tx/${activity.transactionHash}`, '_blank')}>
+                            <VisibilityOutlinedIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      }
+                      key={activity.transactionHash}
+                    >
+                      <ListItemText>
+                        <Typography variant="body1" sx={{ fontSize: '12px' }}>{activity.methodName}</Typography>
+                      </ListItemText>
+                    </ListItem>
 
-
-            {
-              accountActivities?.map(activity => {
-                return <ListItem
-                  secondaryAction={
-                    <Tooltip title="View on block explorer">
-                      <IconButton edge="end" aria-label="delete" sx={{ margin: 0 }} size="small" onClick={() => window.open(`https://mumbai.polygonscan.com/tx/${activity.transactionHash}`, '_blank')}>
-                        <VisibilityOutlinedIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                  }
-                  key={activity.transactionHash}
-                >
-                  <ListItemText>
-                    <Typography variant="body1" sx={{ fontSize: '12px' }}>{activity.methodName}</Typography>
-                  </ListItemText>
-                </ListItem>
-              })
-            }
-
-          </List>
+                  })}
+              </List> :
+              <Box sx={{ height: "100%", display: "flex", justifyContent: "center", alignItems: "center" }}>
+                <HourglassEmptyOutlinedIcon />
+              </Box>
+          }
         </TabPanel>
         <TabPanel value={value} index={2}>
           <Container sx={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '10px 0px' }}>
@@ -309,8 +317,19 @@ function WalletView({
                   <InputLabel htmlFor="password">Password</InputLabel>
                   <Input
                     name="password"
-                    type="password"
                     id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    endAdornment={
+                      <InputAdornment position="end">
+                        <IconButton
+                          aria-label="toggle password visibility"
+                          onClick={handleClickShowPassword}
+                          onMouseDown={handleMouseDownPassword}
+                        >
+                          {showPassword ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      </InputAdornment>
+                    }
                     autoComplete="current-password"
                     value={password}
                     onChange={e => setPassword(e.target.value)}

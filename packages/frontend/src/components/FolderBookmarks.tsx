@@ -36,10 +36,10 @@ const FolderBookmarks = () => {
                     </IconButton>
                 </div>
                 {
-                    folderBookmarks?.bookmarks.map((bookmark) => {
-                        return <BlockchainBookmarkCard bookmark={bookmark} />
+                    // folderBookmarks?.bookmarks.map((bookmark) => {
+                    //     return <BlockchainBookmarkCard bookmark={bookmark} />
 
-                    })
+                    // })
                 }
                 {/* {
                     open && <AddFolderDialog handleClose={() => setOpen(false)} handleAdd={setFolderName} />

@@ -1,17 +1,22 @@
 import React from "react";
-import { ExclamationCircleOutlined } from "@ant-design/icons";
-import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { ethers } from "ethers";
+
 import { useWeb3 } from "../contexts/Web3Context/Web3Context";
-import { Avatar, Button, Checkbox, Container, FormControl, FormControlLabel, Input, InputLabel, Link, Paper, Typography } from "@mui/material";
+import { Button, Container, FormControl, IconButton, Input, InputAdornment, InputLabel, Link, Paper, Typography } from "@mui/material";
+import { Visibility, VisibilityOff } from "@material-ui/icons";
 
 const SignIn = () => {
     const [password, setPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
     const navigate = useNavigate();
     const { userSignIn } = useWeb3()
 
+    const handleClickShowPassword = () => setShowPassword((show) => !show);
+
+    const handleMouseDownPassword = (event: React.MouseEvent<HTMLButtonElement>) => {
+        event.preventDefault();
+    };
 
     const submitHandle = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -46,8 +51,19 @@ const SignIn = () => {
                         <InputLabel htmlFor="password">Password</InputLabel>
                         <Input
                             name="password"
-                            type="password"
                             id="password"
+                            type={showPassword ? 'text' : 'password'}
+                            endAdornment={
+                                <InputAdornment position="end">
+                                    <IconButton
+                                        aria-label="toggle password visibility"
+                                        onClick={handleClickShowPassword}
+                                        onMouseDown={handleMouseDownPassword}
+                                    >
+                                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                                    </IconButton>
+                                </InputAdornment>
+                            }
                             autoComplete="current-password"
                             value={password}
                             onChange={e => setPassword(e.target.value)}

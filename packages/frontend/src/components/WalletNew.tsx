@@ -1,21 +1,13 @@
-import mwallet from "../mwallet.png";
-import { Button } from "antd";
-import { useNavigate } from "react-router-dom";
+import { Box, CircularProgress, IconButton, Tooltip, Typography } from "@mui/material";
+import LogoutOutlinedIcon from '@mui/icons-material/LogoutOutlined';
 import MainLayout from "./Layouts/MainLayout";
 import HeaderLayout from "./Layouts/HeaderLayout";
 import ContentLayout from "./Layouts/ContentLayout";
-import { Box, CircularProgress, IconButton, Tooltip, Typography } from "@mui/material";
-import LogoutOutlinedIcon from '@mui/icons-material/LogoutOutlined';
 import { useWeb3 } from "../contexts/Web3Context/Web3Context";
-import CreateAccount from "./CreateAccount";
 import WalletView from "./WalletView";
 import SignIn from "./SignIn";
 
-
-
-
 const WalletNew = () => {
-  const navigate = useNavigate();
   const { publicAddress, Wallet, disconnectWallet, showLoading } = useWeb3()
   return (
     <MainLayout>

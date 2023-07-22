@@ -1,41 +1,22 @@
-import React, { useEffect, useState } from 'react';
 import { Routes, Route, useNavigate } from "react-router-dom";
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import HomeOutlinedIcon from '@material-ui/icons/HomeOutlined';
 import BookmarksOutlinedIcon from '@material-ui/icons/BookmarksOutlined';
 import AccountCircleOutlinedIcon from '@material-ui/icons/AccountCircleOutlined';
 import CssBaseline from '@mui/material/CssBaseline';
-import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import DashboardIcon from '@material-ui/icons/Dashboard';
-import ShoppingCartIcon from '@material-ui/icons/ShoppingCart';
-import PeopleIcon from '@material-ui/icons/People';
-import BarChartIcon from '@material-ui/icons/BarChart';
-import LayersIcon from '@material-ui/icons/Layers';
-import AssignmentIcon from '@material-ui/icons/Assignment';
 import './App.css';
-import { Button, FloatButton, Menu, MenuProps } from 'antd';
 
-// import { LogoutOutlined, MenuUnfoldOutlined, HomeOutlined, ShoppingOutlined, PlusSquareOutlined } from "@ant-design/icons";
-// import WalletView from './components/WalletView';
-// import Home from './components/Home';
-// import RecoverAccount from './components/RemoveAccount';
-// import CreateAccount from './components/CreateAccount';
-// import WalletHome from './components/WalletHome';
 import { useWeb3 } from './contexts/Web3Context/Web3Context';
-import { useAppState } from './contexts/StateConrext/StateContext';
-// import BookMarks from './components/BookMarks';
 import useAddBookmarkBtn from './hooks/useAddBookmarkBtn';
-import { Alert, Box, Card, CircularProgress, Container, Divider, Drawer, IconButton, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Paper, Snackbar, Typography } from '@mui/material';
-import Home from './components/Home';
+import { Alert, Box,Divider, List, ListItemButton, ListItemIcon, Paper, Snackbar } from '@mui/material';
 import BlockchainBookmarks from './components/BlockchainBookmarks';
-import CustomScrollbar from './components/CustomScrollbar';
 import BlockchainBookmarkDetail from './components/BlockchainBookmarkDetail';
 import CommunityBookmarks from './components/CommunityBookmarks';
 
 import RecoverAccount from './components/RecoverAccount';
 import WalletNew from './components/WalletNew';
 import CreateAccount from './components/CreateAccount';
-import SignIn from './components/SignIn';
+
 import ImportAccount from './components/ImportAccount';
 import FolderBookmarks from './components/FolderBookmarks';
 import ConfirmModal from './components/Modals/ConfirmModal';

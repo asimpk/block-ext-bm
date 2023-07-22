@@ -4,7 +4,6 @@ import { Web3Context } from "./Web3Context";
 import { CHAINS_CONFIG } from "../../chains";
 import { Wallet, ethers } from "ethers";
 import EthCrypto from 'eth-crypto';
-import { v4 as uuidv4 } from 'uuid';
 import { nanoid } from 'nanoid'
 import { tabBookmarksAbi } from '../../abis'
 
@@ -23,7 +22,7 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
     const [unWrappedKey, setUnWrappedKey] = useState<CryptoKey>()
     const [contractInstances, setContractInstances] = useState<ethers.Contract[] | null>(null);
     const [showConfirm, setShowConfirm] = useState(false)
-    const [transaction, setTransaction] = useState<{ transaction: ethers.providers.TransactionRequest, method: string }>()
+    const [transaction, setTransaction] = useState<{ transaction: ethers.providers.TransactionRequest, method: string, totalCost: string | undefined }>()
     const [status, setStatus] = useState('idle');
     const [showLoading, setShowLoading] = useState(true)
     const navigate = useNavigate();
@@ -89,7 +88,7 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
                     const contracts = await getContractInstances(WalletTemp, contractsData);
                     setContractInstances(contracts)
                     navigate("/wallet");
-                    
+
                 }
             }
             setShowLoading(false)
@@ -136,8 +135,8 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
                     address: '0x5FbDB2315678afecb367f032d93F642f64180aa3'
                 }
             ];
-           
-            
+
+
             const publicKey = WalletTemp?.address;
             const buffer = await window.crypto.subtle.exportKey('raw', wrappingKey);
             const sessionkey = arrayBufferToBase64String(buffer);
@@ -164,7 +163,6 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
             const chain = CHAINS_CONFIG["0x7a69"];
             const provider = new ethers.providers.JsonRpcProvider(chain.rpcUrl);
             const privateKey = ethers.Wallet.fromMnemonic(seedPhrase).privateKey;
-            console.log("privateKey2", privateKey)
             const WalletTemp = new ethers.Wallet(privateKey, provider);
             const contractsData: ContractData[] = [
                 // Add contract ABIs and addresses here
@@ -190,65 +188,6 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
         }
 
     }
-
-    // const connectWallet = async (password: string, seedPhrase: string) => {
-    //     const userSalt = await generateSalt(seedPhrase)
-    //     const passwordHash = await generatePasswordHash(password, userSalt)
-    //     const chain = CHAINS_CONFIG["0x7a69"];
-    //     const provider = new ethers.JsonRpcProvider(chain.rpcUrl);
-    //     const privateKey = ethers.Wallet.fromPhrase(seedPhrase).privateKey;
-    //     const publicKey = ethers.Wallet.fromPhrase(seedPhrase).publicKey;
-
-
-
-    //     const WalletTemp = new ethers.Wallet(privateKey, provider);
-
-    //     const signature = EthCrypto.sign(
-    //         privateKey,
-    //         EthCrypto.hash.keccak256(seedPhrase)
-    //     );
-
-    //     console.log("encryptedString1", publicKey, WalletTemp?.signingKey?.publicKey)
-    //     const payload = {
-    //         message: seedPhrase,
-    //         signature
-    //     };
-    //     const encrypted = await EthCrypto.encryptWithPublicKey(
-    //         WalletTemp?.signingKey?.publicKey.substring(2), // by encrypting with bobs publicKey, only bob can decrypt the payload with his privateKey
-    //         JSON.stringify(payload) // we have to stringify the payload before we can encrypt it
-    //     );
-    //     const encryptedString = EthCrypto.cipher.stringify(encrypted);
-    //     // // we parse the string into the object again
-    //     const encryptedObject = EthCrypto.cipher.parse(encryptedString);
-
-    //     const decrypted = await EthCrypto.decryptWithPrivateKey(
-    //         privateKey,
-    //         encryptedObject
-    //     );
-    //     const decryptedPayload = JSON.parse(decrypted);
-
-    //     // // check signature
-    //     // const senderAddress = EthCrypto.recover(
-    //     //     decryptedPayload.signature,
-    //     //     EthCrypto.hash.keccak256(decryptedPayload.message)
-    //     // );
-
-    //      // check signature
-    //      const senderPublicKey = EthCrypto.recoverPublicKey(
-    //         decryptedPayload.signature,
-    //         EthCrypto.hash.keccak256(decryptedPayload.message)
-    //     );
-
-    //     console.log(
-    //         'encryptedString2 ' +
-    //         decryptedPayload.message,
-    //         senderPublicKey
-    //     );
-
-    //     console.log("WalletTemp", WalletTemp, provider)
-    // }
-
-
 
     const disconnectWallet = () => {
         chrome && chrome.storage.session.remove(["sessionkey"]).then((result) => {
@@ -278,9 +217,6 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
             } else {
                 privateKey = decryptedMnemonic;
             }
-
-            console.log("privateKeySignIn", privateKey)
-            // const privateKey = decryptedMnemonic;
             const WalletTemp = new ethers.Wallet(privateKey, provider);
             const contractsData: ContractData[] = [
                 // Add contract ABIs and addresses here
@@ -314,7 +250,6 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
     }
 
     const getPrivateKey = async (passphrase: string): Promise<boolean> => {
-        // Retrieve the encryptedStore from chrome.storage.local
         const { encryptMnemonicStore, userSalt, wrappedKeyString } = await chrome.storage.local.get(['encryptMnemonicStore', "userSalt", "wrappedKeyString"])
         if (encryptMnemonicStore && userSalt && wrappedKeyString) {
             let privateKey;
@@ -340,69 +275,46 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
 
     }
 
-    const encryptMessages = async () => {
-        if (unWrappedKey && wallet) {
-            const signature1 = EthCrypto.sign(
-                wallet?.privateKey,
-                EthCrypto.hash.keccak256("before first messages with")
-            );
-            const payload1 = {
-                message: "first message",
-                signature1
-            };
-            const encrypted1 = await EthCrypto.encryptWithPublicKey(
-                wallet.publicKey.substring(2), // by encrypting with bobs publicKey, only bob can decrypt the payload with his privateKey
-                JSON.stringify(payload1) // we have to stringify the payload before we can encrypt it
-            );
-            const signature2 = EthCrypto.sign(
-                wallet?.privateKey,
-                EthCrypto.hash.keccak256("second msg second msg second msg second msg second msg second msg second msg second msg second msg second msg second msg")
-            );
-            const payload2 = {
-                message: "second msg second msg second msg second msg second msg second msg second msg second msg second msg second msg second msg",
-                signature2
-            };
-            const encrypted2 = await EthCrypto.encryptWithPublicKey(
-                wallet.publicKey.substring(2), // by encrypting with bobs publicKey, only bob can decrypt the payload with his privateKey
-                JSON.stringify(payload2) // we have to stringify the payload before we can encrypt it
-            );
-            const encryptedString1 = EthCrypto.cipher.stringify(encrypted1);
-            const encryptedString2 = EthCrypto.cipher.stringify(encrypted2);
+    const getEncryptedString = async (wallet: Wallet, msg: string): Promise<string> => {
+        const signature = EthCrypto.sign(
+            wallet.privateKey,
+            EthCrypto.hash.keccak256(msg)
+        );
+        const payload = {
+            message: msg,
+            signature
+        };
+        const encryptedMsg = await EthCrypto.encryptWithPublicKey(
+            wallet.publicKey.substring(2), // by encrypting with bobs publicKey, only bob can decrypt the payload with his privateKey
+            JSON.stringify(payload) // we have to stringify the payload before we can encrypt it
+        );
 
-            console.log("encryptedStringLength", encryptedString1.length, encryptedString2.length)
-            await chrome.storage.local.set({ firstMsg: encryptedString1 })
-        }
+        const encryptedString = EthCrypto.cipher.stringify(encryptedMsg);
+        const encryptedStringCompressed = EthCrypto.hex.compress(encryptedString, true);
+        return encryptedStringCompressed
 
     }
 
-    const decryptMessages = async () => {
-        if (unWrappedKey && wallet) {
-            const result = await chrome.storage.local.get(["firstMsg"])
-            const { firstMsg } = result
-            await chrome.storage.local.set({ firstMsg })
-            if (firstMsg) {
-                const encryptedObject = EthCrypto.cipher.parse(firstMsg);
 
-                const decrypted = await EthCrypto.decryptWithPrivateKey(
-                    wallet?.privateKey,
-                    encryptedObject
-                );
-                const decryptedPayload = JSON.parse(decrypted);
 
-                // // check signature
-                // const senderAddress = EthCrypto.recover(
-                //     decryptedPayload.signature,
-                //     EthCrypto.hash.keccak256(decryptedPayload.message)
-                // );
+    const getDcryptedString = async (wallet: Wallet, encryptedString: string): Promise<string> => {
+        const encryptedObject = EthCrypto.cipher.parse(encryptedString);
+        const decrypted = await EthCrypto.decryptWithPrivateKey(
+            wallet.privateKey,
+            encryptedObject
+        );
+        const decryptedPayload = JSON.parse(decrypted);
+        // // check signature
+        // const senderAddress = EthCrypto.recover(
+        //     decryptedPayload.signature,
+        //     EthCrypto.hash.keccak256(decryptedPayload.message)
+        // );
+        return decryptedPayload.message
 
-                console.log("Decrupted msgz for", decryptedPayload.message)
-            }
-        }
     }
 
     // Function to prepare a transaction
     async function prepareTransaction(contract: ethers.Contract, wallet: Wallet, methodName: string, methodParams: any[]): Promise<ethers.providers.TransactionRequest> {
-
 
         // Prepare the transaction data
         const method = contract.interface.getFunction(methodName);
@@ -421,8 +333,15 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
             gasLimit: estimatedGas,
             gasPrice: gasPrice,
         };
-
         return transaction;
+    }
+
+    const getTotalCost = (transaction: ethers.providers.TransactionRequest) => {
+        if (transaction && transaction.gasLimit && transaction.gasPrice) {
+            const totalCost = parseFloat(transaction.gasLimit.toString()) * parseFloat(transaction.gasPrice.toString())
+            const totalCostInETH = ethers.utils.formatEther(totalCost)
+            return totalCostInETH
+        }
     }
 
 
@@ -431,12 +350,13 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
         if (contractInstances && wallet) {
             const [tabBookmarks] = contractInstances;
             const uuid = nanoid()
+            const encryptedFolderName = await getEncryptedString(wallet, folderName)
             const folderId = ethers.utils.formatBytes32String(uuid);
-            const name = ethers.utils.formatBytes32String(folderName);
             const color = ethers.utils.formatBytes32String("#000000");
-            const transaction = await prepareTransaction(tabBookmarks, wallet, "createFolder", [folderId, name, color])
+            const transaction = await prepareTransaction(tabBookmarks, wallet, "addFolder", [folderId, encryptedFolderName, color])
             if (transaction) {
-                setTransaction({ transaction, method: "Create Folder" });
+                const totalCost = getTotalCost(transaction)
+                setTransaction({ transaction, method: "Create Folder", totalCost });
                 setShowConfirm(true)
             }
         }
@@ -448,7 +368,8 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
             const folderId = ethers.utils.formatBytes32String(deltFolderId);
             const transaction = await prepareTransaction(tabBookmarks, wallet, "deleteFolder", [folderId])
             if (transaction) {
-                setTransaction({ transaction, method: "Delete Folder" });
+                const totalCost = getTotalCost(transaction)
+                setTransaction({ transaction, method: "Delete Folder", totalCost });
                 setShowConfirm(true)
             }
         }
@@ -458,25 +379,57 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
         if (contractInstances && wallet) {
             const [tabBookmarks] = contractInstances;
             const folderId = ethers.utils.formatBytes32String(deltFolderId);
-            const name = ethers.utils.formatBytes32String('updated name');
+            const name = 'updated name';
             const color = ethers.utils.formatBytes32String("#000000 updated");
             const transaction = await prepareTransaction(tabBookmarks, wallet, "updateFolder", [folderId, name, color])
             if (transaction) {
-                setTransaction({ transaction, method: "Update Folder" });
+                const totalCost = getTotalCost(transaction)
+                setTransaction({ transaction, method: "Update Folder", totalCost });
                 setShowConfirm(true)
             }
         }
     }
 
-    const addBookmark = async (folderId: string, urlVal: string) => {
+    const addBookmark = async (folderId: string, url: string) => {
         if (contractInstances && wallet) {
             const [tabBookmarks] = contractInstances;
-            const uuid = nanoid()
+            const uuid = nanoid();
+            const encryptedUrl = await getEncryptedString(wallet, url)
             const folderIdBytes = ethers.utils.formatBytes32String(folderId);
             const bookmarkId = ethers.utils.formatBytes32String(uuid);
-            const transaction = await prepareTransaction(tabBookmarks, wallet, "addBookmark", [folderIdBytes, bookmarkId, urlVal])
+            const transaction = await prepareTransaction(tabBookmarks, wallet, "addBookmark", [folderIdBytes, bookmarkId, encryptedUrl])
             if (transaction) {
-                setTransaction({ transaction, method: "Add Bookmark" });
+                const totalCost = getTotalCost(transaction)
+                setTransaction({ transaction, method: "Add Bookmark", totalCost });
+                setShowConfirm(true)
+            }
+        }
+    }
+
+    const deleteBookmark = async (folderId: string, bookmarkId: string) => {
+        if (contractInstances && wallet) {
+            const [tabBookmarks] = contractInstances;
+            const bytesFolderId = ethers.utils.formatBytes32String(folderId);
+            const bytesBookmarkId = ethers.utils.formatBytes32String(bookmarkId);
+            const transaction = await prepareTransaction(tabBookmarks, wallet, "deleteBookmark", [bytesFolderId, bytesBookmarkId])
+            if (transaction) {
+                const totalCost = getTotalCost(transaction)
+                setTransaction({ transaction, method: "Delete Folder", totalCost });
+                setShowConfirm(true)
+            }
+        }
+    }
+
+    const moveBookmark = async (fromFolderId: string, toFolderId: string, bookmarkId: string) => {
+        if (contractInstances && wallet) {
+            const [tabBookmarks] = contractInstances;
+            const bytesFromFolderId = ethers.utils.formatBytes32String(fromFolderId);
+            const bytesToFolderId = ethers.utils.formatBytes32String(toFolderId);
+            const bytesBookmarkId = ethers.utils.formatBytes32String(bookmarkId);
+            const transaction = await prepareTransaction(tabBookmarks, wallet, "moveBookmark", [bytesFromFolderId, bytesToFolderId, bytesBookmarkId])
+            if (transaction) {
+                const totalCost = getTotalCost(transaction)
+                setTransaction({ transaction, method: "Move Bookmark", totalCost });
                 setShowConfirm(true)
             }
         }
@@ -535,15 +488,17 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
         contractInstances,
         showLoading,
         showConfirm,
+        transaction,
         userSignIn,
         getPrivateKey,
+        getDcryptedString,
         connectWallet,
         disconnectWallet,
-        encryptMessages,
-        decryptMessages,
         createFolder,
         deleteFolder,
         updateFolder,
+        deleteBookmark,
+        moveBookmark,
         closeConfirmModal,
         confirmTransaction,
         status,

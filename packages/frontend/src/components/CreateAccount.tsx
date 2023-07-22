@@ -3,16 +3,25 @@ import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { ethers } from "ethers";
 import { useWeb3 } from "../contexts/Web3Context/Web3Context";
-import { Alert, Button, Card, Container, FormControl, Input, InputLabel, Paper, Typography } from "@mui/material";
+import { Alert, Button, Card, Container, FormControl, IconButton, Input, InputAdornment, InputLabel, Paper, Typography } from "@mui/material";
 import MainLayout from "./Layouts/MainLayout";
 import HeaderLayout from "./Layouts/HeaderLayout";
 import ContentLayout from "./Layouts/ContentLayout";
+import { Visibility, VisibilityOff } from "@material-ui/icons";
 
 function CreateAccount() {
   const [newSeedPhrase, setNewSeedPhrase] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
-  const { connectWallet } = useWeb3()
+  const { connectWallet } = useWeb3();
+
+
+  const handleClickShowPassword = () => setShowPassword((show) => !show);
+
+  const handleMouseDownPassword = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+  };
 
   function generateWallet() {
     const mnemonic = ethers.Wallet.createRandom().mnemonic?.phrase ?? "";
@@ -27,8 +36,8 @@ function CreateAccount() {
     }
   }
 
-  const validPassword = (password : string) => {
-    if (password.length !== 0 &&  password.replace(/\s/g, '').length ) {
+  const validPassword = (password: string) => {
+    if (password.length !== 0 && password.replace(/\s/g, '').length) {
       return true
     }
     return false
@@ -78,19 +87,30 @@ function CreateAccount() {
               <InputLabel htmlFor="password">Password</InputLabel>
               <Input
                 name="password"
-                type="password"
                 id="password"
+                type={showPassword ? 'text' : 'password'}
+                endAdornment={
+                  <InputAdornment position="end">
+                    <IconButton
+                      aria-label="toggle password visibility"
+                      onClick={handleClickShowPassword}
+                      onMouseDown={handleMouseDownPassword}
+                    >
+                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                }
                 autoComplete="current-password"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
               />
             </FormControl>
             <Button
-            disabled={
-              newSeedPhrase.split(" ").length !== 12 || newSeedPhrase.slice(-1) === " " || !validPassword(password)
-            }
+              disabled={
+                newSeedPhrase.split(" ").length !== 12 || newSeedPhrase.slice(-1) === " " || !validPassword(password)
+              }
               variant="outlined"
-              sx={{ marginBottom: "10px",marginTop: "22px", padding: "0 15px", width: '80%' }}
+              sx={{ marginBottom: "10px", marginTop: "22px", padding: "0 15px", width: '80%' }}
               onClick={() => setWalletAndMnemonic()}
             >
               Open Your New Wallet

@@ -3,19 +3,29 @@ import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { ethers } from "ethers";
 import { useWeb3 } from "../contexts/Web3Context/Web3Context";
-import { Alert, Button, Container, FormControl, Input, InputLabel, Paper, TextField, Typography } from "@mui/material";
+import { Alert, Button, Container, FormControl, IconButton, Input, InputAdornment, InputLabel, Paper, TextField, Typography } from "@mui/material";
 import MainLayout from "./Layouts/MainLayout";
 import HeaderLayout from "./Layouts/HeaderLayout";
 import ContentLayout from "./Layouts/ContentLayout";
 import TextareaAutosize from '@mui/base/TextareaAutosize';
+import { Visibility, VisibilityOff } from "@material-ui/icons";
 
 function RecoverAccount() {
   const navigate = useNavigate();
   const [typedSeed, setTypedSeed] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [nonValid, setNonValid] = useState(false);
 
   const { connectWallet } = useWeb3()
+
+
+  const handleClickShowPassword = () => setShowPassword((show) => !show);
+
+    const handleMouseDownPassword = (event: React.MouseEvent<HTMLButtonElement>) => {
+        event.preventDefault();
+    };
+
 
 
   function seedAdjust(e: { target: { value: React.SetStateAction<string>; }; }) {
@@ -34,8 +44,8 @@ function RecoverAccount() {
     return;
   }
 
-  const validPassword = (password : string) => {
-    if (password.length !== 0 &&  password.replace(/\s/g, '').length ) {
+  const validPassword = (password: string) => {
+    if (password.length !== 0 && password.replace(/\s/g, '').length) {
       return true
     }
     return false
@@ -85,8 +95,19 @@ function RecoverAccount() {
               <InputLabel htmlFor="password">Set Password</InputLabel>
               <Input
                 name="password"
-                type="password"
                 id="password"
+                type={showPassword ? 'text' : 'password'}
+                endAdornment={
+                  <InputAdornment position="end">
+                    <IconButton
+                      aria-label="toggle password visibility"
+                      onClick={handleClickShowPassword}
+                      onMouseDown={handleMouseDownPassword}
+                    >
+                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                }
                 autoComplete="current-password"
                 value={password}
                 onChange={e => setPassword(e.target.value)}

@@ -27,6 +27,7 @@
     "typechain": "8.2.0"
   },
   "dependencies": {
+    "@openzeppelin/contracts": "^4.9.2",
     "ethers": "^6.5.1"
   }
 }
