@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from "react-router-dom";
 import CreateNewFolderOutlinedIcon from '@mui/icons-material/CreateNewFolderOutlined';
 import ContentLayout from './Layouts/ContentLayout'
@@ -11,12 +11,12 @@ import BookmarkAddedOutlinedIcon from '@mui/icons-material/BookmarkAddedOutlined
 import ArrowBackIosNewOutlinedIcon from '@mui/icons-material/ArrowBackIosNewOutlined';
 import AddFolderDialog from './AddFolderDialog';
 import AddBookmarkDialog from './AddBookmarkDialog';
-import { useAppState } from '../contexts/StateConrext/StateContext';
+import { AllBookmarksTypes, TabBookmarksTypes, useAppState } from '../contexts/StateConrext/StateContext';
 import BookmarkFolderCard from './Cards/BookmarkFolderCard';
 import { useWeb3 } from '../contexts/Web3Context/Web3Context';
 import useAddBookmarkBtn from '../hooks/useAddBookmarkBtn';
 
-const BlockchainBookmarks = () => {
+const TabBookmarks = () => {
     const [open, setOpen] = useState(false);
     const [openAddBookmark, setOpenAddBookmark] = useState(false)
     const [selectedFolder, setSelectedFolder] = useState("")
@@ -24,45 +24,70 @@ const BlockchainBookmarks = () => {
     const [view, setView] = useState<"folder" | "bookmarks" | "folder-bookmarks">("folder")
     const [exemptedFolderId, setExemptedFolderId] = useState("")
     const [moveBookmarkId, setMoveBookmarkId] = useState("")
-    const { tabBookmarks, allBookmarks } = useAppState()
+    const { tabBookmarks } = useAppState()
     const { activeTab } = useAddBookmarkBtn();
+    const [showBookmarkBtn, setShowBookmarkBtn] = useState<{
+        id: string;
+        url: string;
+        folderId: string
+    }>()
+    const [allBookmarks, setAllBookmarks] = useState<AllBookmarksTypes>([]);
 
-    const { createFolder, deleteFolder, updateFolder, addBookmark, deleteBookmark, moveBookmark, publicAddress, Wallet } = useWeb3()
+    const { createFolder, deleteFolder, updateFolder, addTabBookmark, deleteBookmark, moveBookmark, publicAddress, Wallet, getDcryptedString } = useWeb3()
 
-    const showBookmarkBtn = allBookmarks.find(bookmark => bookmark.url === activeTab?.url)
+
+
+    useEffect(() => {
+        if (Wallet) {
+            let tempAllBookmarks: AllBookmarksTypes = []
+            setShowBookmarkBtn(undefined)
+            tabBookmarks.forEach((tab: any) => {
+                const { bookmarks } = tab
+                bookmarks.length > 0 && bookmarks.forEach((bkmrk: any) => {
+                    if (bkmrk) {
+                        if (bkmrk.url === activeTab?.url) {
+                            setShowBookmarkBtn(bkmrk)
+                        }
+                        tempAllBookmarks.push(bkmrk)
+                    }
+                })
+            })
+            setAllBookmarks(tempAllBookmarks)
+        }
+    }, [Wallet, tabBookmarks, activeTab])
 
     const setFolderName = async (folderName: string) => {
         if (folderName) {
-            await createFolder(folderName)
+            await createFolder("tabBookmarks", folderName)
             setOpen(false)
         }
     }
     const handleAddBookmark = async (folderId: string) => {
         if (folderId && activeTab && (!exemptedFolderId && !moveBookmarkId)) {
             setOpenAddBookmark(false)
-            await addBookmark(folderId, activeTab.url)
+            await addTabBookmark(folderId, activeTab.url)
         } else if (folderId && exemptedFolderId && moveBookmarkId) {
             setOpenAddBookmark(false)
             setExemptedFolderId("");
             setMoveBookmarkId("");
-            await moveBookmark(exemptedFolderId, folderId, moveBookmarkId)
+            await moveBookmark("tabBookmarks", exemptedFolderId, folderId, moveBookmarkId)
         }
     }
 
     const handleDeleteFolder = async (folderId: string) => {
         if (folderId) {
-            await deleteFolder(folderId)
+            await deleteFolder("tabBookmarks", folderId)
         }
     }
     const handleUpdateFolder = async (folderId: string) => {
         if (folderId) {
-            await updateFolder(folderId)
+            await updateFolder("tabBookmarks", folderId)
         }
     }
 
     const handleDeleteBookmark = async (folderId: string, bookmarkId: string) => {
         if (folderId && bookmarkId) {
-            await deleteBookmark(folderId, bookmarkId)
+            await deleteBookmark("tabBookmarks", folderId, bookmarkId)
         }
     }
 
@@ -93,7 +118,7 @@ const BlockchainBookmarks = () => {
         }
         return name
     }
-    const getView = (viewType: "folder" | "bookmarks" | "folder-bookmarks") => {
+    const getView = (viewType: "folder" | "bookmarks" | "folder-bookmarks", tabBookmarks: TabBookmarksTypes) => {
         switch (viewType) {
             case "folder":
                 return tabBookmarks?.map((folder) => {
@@ -167,8 +192,8 @@ const BlockchainBookmarks = () => {
                             <Box>
                                 {
                                     showBookmarkBtn ?
-                                        <Tooltip title={`This page is already bookmarked, click to view, ${showBookmarkBtn?.url}`}>
-                                            <IconButton onClick={() => window.open(showBookmarkBtn?.url, '_blank')}>
+                                        <Tooltip title={`This page is already bookmarked, ${showBookmarkBtn?.url}`}>
+                                            <IconButton>
                                                 <BookmarkAddedOutlinedIcon />
                                             </IconButton>
                                         </Tooltip>
@@ -189,14 +214,14 @@ const BlockchainBookmarks = () => {
                         </div>
                         {
 
-                            getView(view)
+                            getView(view, tabBookmarks)
                         }
                         {
                             open && <AddFolderDialog handleClose={() => setOpen(false)} handleAdd={setFolderName} />
                         }
                         {
                             openAddBookmark && <AddBookmarkDialog handleClose={() => setOpenAddBookmark(false)}
-                                handleAdd={handleAddBookmark} exemptFolderId={exemptedFolderId} handleShowFolder={() => { setOpen(true); setOpenAddBookmark(false)}} />
+                                handleAdd={handleAddBookmark} exemptFolderId={exemptedFolderId} handleShowFolder={() => { setOpen(true); setOpenAddBookmark(false) }} />
                         }
 
                     </ContentLayout> :
@@ -219,4 +244,4 @@ const BlockchainBookmarks = () => {
     )
 }
 
-export default BlockchainBookmarks
+export default TabBookmarks

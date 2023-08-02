@@ -134,26 +134,26 @@ export default function ConfirmationDialog() {
         return gasPrice;
     }
 
-    const fetchData = async () => {
-        try {
-            const tabs = await chrome.tabs.query({
-                currentWindow: true,
-                active: true
-            });
-            if(contractInstances){
-                const [tabBookmarks] = contractInstances
-                const gasLimit = await tabBookmarks.estimateGas.addBookmark(0, 'check gas limit');
-                const gasPrice =  await getGasPrice();
-                console.log("gasLimit", gasLimit?.toString(), gasPrice?.toString(), tabs[0])
-            }
-        } catch (error) {
-            console.error('Error:', error);
-        }
-    }
+    // const fetchData = async () => {
+    //     try {
+    //         const tabs = await chrome.tabs.query({
+    //             currentWindow: true,
+    //             active: true
+    //         });
+    //         if(contractInstances){
+    //             const [tabBookmarks] = contractInstances
+    //             const gasLimit = await tabBookmarks.estimateGas.addBookmark(0, 'check gas limit');
+    //             const gasPrice =  await getGasPrice();
+    //             console.log("gasLimit", gasLimit?.toString(), gasPrice?.toString(), tabs[0])
+    //         }
+    //     } catch (error) {
+    //         console.error('Error:', error);
+    //     }
+    // }
 
     return (
         <Box sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper' }}>
-            <Button variant="outlined" onClick={fetchData}>Add Bookmark</Button>
+            {/* <Button variant="outlined" onClick={fetchData}>Add Bookmark</Button> */}
             <ConfirmationDialogRaw
                 id="ringtone-menu"
                 keepMounted

@@ -2,14 +2,14 @@ import { Routes, Route, useNavigate } from "react-router-dom";
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import BookmarksOutlinedIcon from '@material-ui/icons/BookmarksOutlined';
 import AccountCircleOutlinedIcon from '@material-ui/icons/AccountCircleOutlined';
+import AddLinkOutlinedIcon from '@mui/icons-material/AddLinkOutlined';
 import CssBaseline from '@mui/material/CssBaseline';
 import DashboardIcon from '@material-ui/icons/Dashboard';
 import './App.css';
-
 import { useWeb3 } from './contexts/Web3Context/Web3Context';
-import useAddBookmarkBtn from './hooks/useAddBookmarkBtn';
-import { Alert, Box,Divider, List, ListItemButton, ListItemIcon, Paper, Snackbar } from '@mui/material';
-import BlockchainBookmarks from './components/BlockchainBookmarks';
+import { Alert, Box, Divider, List, ListItemButton, ListItemIcon, Paper, Snackbar, Tooltip } from '@mui/material';
+import TabBookmarks from './components/TabBookmarks';
+import CustomBookmarks from "./components/CustomBookmarks";
 import BlockchainBookmarkDetail from './components/BlockchainBookmarkDetail';
 import CommunityBookmarks from './components/CommunityBookmarks';
 
@@ -20,6 +20,7 @@ import CreateAccount from './components/CreateAccount';
 import ImportAccount from './components/ImportAccount';
 import FolderBookmarks from './components/FolderBookmarks';
 import ConfirmModal from './components/Modals/ConfirmModal';
+import { useState } from "react";
 
 const darkTheme = createTheme({
   palette: {
@@ -28,8 +29,8 @@ const darkTheme = createTheme({
 });
 
 function App() {
-  const { showAddBookMarkBtn, activeTab, addBookMark } = useAddBookmarkBtn()
-  const { showConfirm, status, showLoading, publicAddress, Wallet } = useWeb3()
+  const [selectedMenu, setSelectedMenu] = useState(1);
+  const { showConfirm, status } = useWeb3();
   const navigate = useNavigate();
 
 
@@ -37,60 +38,64 @@ function App() {
     <ThemeProvider theme={darkTheme}>
       <CssBaseline />
       <div className="App">
-
-        {/* <div style={{ display: 'flex', alignItems: 'center', width: "100%", height: '70px' }}>
-          {
-            showAddBookMarkBtn && <Button
-              style={{
-                left: 55,
-                top: 75,
-                width: 35
-              }} onClick={() => activeTab && addBookMark(activeTab)} />
-          }
-        </div> */}
         {showConfirm && <ConfirmModal />}
-        {status === 'pending' &&
-          <Snackbar open={true}>
-            <Alert severity="info">
-              This is an info alert — <strong>{status}!</strong>
-            </Alert></Snackbar>}
+        {
+          status === 'pending' &&
+          <Snackbar open={true} sx={{ marginLeft: '100px', width: '60%' }}>
+            <Alert severity="info" sx={{ width: "100%" }}>
+              Transaction is — <strong>{status}!</strong>
+            </Alert>
+          </Snackbar>
+        }
 
         {status === 'failed' &&
-          <Snackbar open={true} autoHideDuration={2000}>
-            <Alert severity="error">
-              This is an error alert — <strong>{status}!</strong>
+          <Snackbar open={true} autoHideDuration={2000} sx={{ marginLeft: '100px', width: '60%' }}>
+            <Alert severity="error" sx={{ width: "100%" }}>
+              Transaction is — <strong>{status}!</strong>
             </Alert></Snackbar>}
         {status === 'confirmed' &&
-          <Snackbar open={true} autoHideDuration={2000}>
-            <Alert severity="success">
-              This is an success alert — <strong>{status}!</strong>
+          <Snackbar open={true} autoHideDuration={2000} sx={{ marginLeft: '100px', width: '60%' }}>
+            <Alert severity="success" sx={{ width: "100%" }}>
+              Transaction is — <strong>{'Successful'}!</strong>
             </Alert>
           </Snackbar>}
-
         <Paper
           sx={{ display: "flex", flexDirection: "column", width: "60px" }}
         >
           <List sx={{ padding: "8px 0 0 0" }}>
-            <ListItemButton key={1} onClick={() => navigate("/")}>
-              <ListItemIcon sx={{ minWidth: 40 }}>
-                <DashboardIcon />
-              </ListItemIcon>
-            </ListItemButton>
+            <Tooltip title="Home">
+              <ListItemButton key={1} onClick={() => { navigate("/"); setSelectedMenu(1) }} sx={selectedMenu === 1 ? { backgroundColor: "rgba(255, 255, 255, 0.08)" } : null}>
+                <ListItemIcon sx={{ minWidth: 40 }}>
+                  <DashboardIcon />
+                </ListItemIcon>
+              </ListItemButton>
+            </Tooltip>
           </List>
           <List sx={{ flex: "1", padding: "11px 0 0 0" }}>
             <Divider />
-            <ListItemButton key={3} onClick={() => navigate("/blockchain-bookmarks")}>
-              <ListItemIcon sx={{ minWidth: 40 }}>
-                <BookmarksOutlinedIcon />
-              </ListItemIcon>
-            </ListItemButton>
+            <Tooltip title="Bookmarks">
+              <ListItemButton key={2} onClick={() => { navigate("/blockchain-bookmarks"); setSelectedMenu(2) }} sx={selectedMenu === 2 ? { backgroundColor: "rgba(255, 255, 255, 0.08)" } : null}>
+                <ListItemIcon sx={{ minWidth: 40 }}>
+                  <BookmarksOutlinedIcon />
+                </ListItemIcon>
+              </ListItemButton>
+            </Tooltip>
+            <Tooltip title="Custom Bookmarks">
+              <ListItemButton key={3} onClick={() => { navigate("/custom-bookmarks"); setSelectedMenu(3) }} sx={ selectedMenu === 3 ? { backgroundColor: "rgba(255, 255, 255, 0.08)", marginTop: '4px' } : {marginTop: '4px' } }>
+                <ListItemIcon sx={{ minWidth: 40 }}>
+                  <AddLinkOutlinedIcon />
+                </ListItemIcon>
+              </ListItemButton>
+            </Tooltip>
           </List>
           <List sx={{ maxWidth: 60 }}>
-            <ListItemButton key={6} onClick={() => navigate("/wallet")}>
-              <ListItemIcon sx={{ minWidth: 40 }}>
-                <AccountCircleOutlinedIcon />
-              </ListItemIcon>
-            </ListItemButton>
+            <Tooltip title="Wallet">
+              <ListItemButton key={4} onClick={() => { navigate("/wallet"); setSelectedMenu(4) }} sx={selectedMenu === 4 ? { backgroundColor: "rgba(255, 255, 255, 0.08)" } : null}>
+                <ListItemIcon sx={{ minWidth: 40 }}>
+                  <AccountCircleOutlinedIcon />
+                </ListItemIcon>
+              </ListItemButton>
+            </Tooltip>
           </List>
         </Paper>
         <Box
@@ -98,7 +103,8 @@ function App() {
         >
           <Routes>
             <Route path="/" element={<WalletNew />} />
-            <Route path="/blockchain-bookmarks" element={<BlockchainBookmarks />} />
+            <Route path="/blockchain-bookmarks" element={<TabBookmarks />} />
+            <Route path="/custom-bookmarks" element={<CustomBookmarks />} />
             <Route path="/blockchain-bookmarks/:folderId" element={<FolderBookmarks />} />
             <Route path="/blockchain-bookmarks/:folderId/:bookmarkId" element={<BlockchainBookmarkDetail />} />
             <Route path="/community-bookmarks" element={<CommunityBookmarks />} />

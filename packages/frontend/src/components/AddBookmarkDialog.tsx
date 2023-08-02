@@ -34,7 +34,7 @@ const options = [
 
 export interface ConfirmationDialogRawProps {
     handleClose: () => void
-    handleAdd: (folderName: string) => void,
+    handleAdd: (folderId: string) => void,
     handleShowFolder: () => void,
     exemptFolderId?: string
 }
@@ -57,7 +57,6 @@ const AddBookmarkDialog = (props: ConfirmationDialogRawProps) => {
     const filtertabBookmarks = exemptFolderId ? tabBookmarks.filter(tab => tab?.folderId !== exemptFolderId) : tabBookmarks;
 
     return (
-
         <Dialog
             sx={{ '& .MuiDialog-paper': { width: '70%', maxHeight: 435, marginLeft: "90px", borderRadius: "18px" } }}
             maxWidth="xs"

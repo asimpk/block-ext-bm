@@ -21,7 +21,7 @@ const LocalHost: ChainType = {
 const MumbaiTestnet: ChainType = {
     hex: '0x13881',
     name: 'Mumbai Testnet',
-    rpcUrl: '',
+    rpcUrl: 'https://polygon-mumbai.g.alchemy.com/v2/lAHM3rrDoqQU5NZBg6E2jrRlnUoR_blQ',
     ticker: "MATIC"
 };
 

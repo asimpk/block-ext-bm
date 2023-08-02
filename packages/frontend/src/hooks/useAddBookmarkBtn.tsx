@@ -28,7 +28,6 @@ const useAddBookmarkBtn = () => {
                     const existingBookmark = bookmarks.find((bookmark: { id: number, url: string, title: string }) => bookmark?.url === tab.url);
                     if (existingBookmark) {
                         // Bookmark already exists
-                        console.log('Bookmark already created for this tab');
                         setShowAddBookMarkBtn(false)
                         setActiveTab(undefined)
                         return;
@@ -62,7 +61,6 @@ const useAddBookmarkBtn = () => {
             const bookmarks = result.bookmarks;
             bookmarks.push({ ...activtb });
             chrome.storage.local.set({ bookmarks }).then(success => {
-                console.log("success", bookmarks)
                 setBookmarks(bookmarks)
                 navigate("/")
                 resetBookMarkBtnState()

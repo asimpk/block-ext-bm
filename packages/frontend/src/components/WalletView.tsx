@@ -4,12 +4,10 @@ import { useNavigate } from "react-router-dom";
 import { CHAINS_CONFIG } from "../chains";
 import { ethers } from "ethers";
 import { useWeb3 } from "../contexts/Web3Context/Web3Context";
-import { Box, Button, Container, FormControl, IconButton, Input, InputAdornment, InputLabel, List, ListItem, ListItemButton, ListItemText, Paper, Tab, Tabs, TextField, Tooltip, Typography } from "@mui/material";
+import { Alert, Box, Button, Card, CircularProgress, Container, FormControl, IconButton, Input, InputAdornment, InputLabel, Link, List, ListItem, ListItemButton, ListItemText, Paper, Snackbar, Tab, Tabs, TextField, Tooltip, Typography } from "@mui/material";
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import CustomScrollbar from "./CustomScrollbar";
 import { Visibility, VisibilityOff } from "@material-ui/icons";
-
-
 
 type WalletViewProps = {
   selectedChain: string
@@ -70,21 +68,19 @@ function WalletView({
   const navigate = useNavigate();
   const [tokens, setTokens] = useState([]);
   const [nfts, setNfts] = useState([]);
-  const [balance, setBalance] = useState(0);
   const [fetching, setFetching] = useState(true);
   const [amountToSend, setAmountToSend] = useState("");
   const [sendToAddress, setSendToAddress] = useState("");
-  const [processing, setProcessing] = useState(false);
-  const [hash, setHash] = useState("");
+
   const [value, setValue] = React.useState(0);
   const [accountActivities, setAccountActivities] = useState<{ methodName: string, transactionHash: string, status: boolean }[]>([])
-  const [showButton, setShowButton] = useState(false)
+
   const [showPrivateKey, setShowPrivateKey] = useState(false)
   const [showPasswordModal, setShowPasswordModal] = useState(false)
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  const { Wallet, publicAddress, getPrivateKey } = useWeb3()
+  const { Wallet, publicAddress, transferTokens, getPrivateKey, userBalance, userBalanceLoading } = useWeb3()
 
 
   const handleClickShowPassword = () => setShowPassword((show) => !show);
@@ -94,56 +90,19 @@ function WalletView({
   };
 
   async function sendTransaction(to: string, amount: string) {
-    const tx = {
-      to,
-      value: ethers.utils.parseEther(amount),
-    };
-
-    setProcessing(true);
     try {
-      if (Wallet) {
-        const transaction = await Wallet.sendTransaction(tx);
-
-        setHash(transaction?.hash);
-        const receipt = await transaction.wait();
-
-        setHash("");
-        setProcessing(false);
-        setAmountToSend("");
-        setSendToAddress("");
-
-        if (receipt?.status === 1) {
-          getAccountTokens();
-        } else {
-          console.log("failed");
-        }
-      }
-
+      await transferTokens(to, amount);
     } catch (err) {
-      console.log("err", err)
-      setHash("");
-      setProcessing(false);
+      setAmountToSend("");
+      setSendToAddress("");
+    }
+    finally {
       setAmountToSend("");
       setSendToAddress("");
     }
   }
 
-  async function getAccountTokens() {
-    setFetching(true);
-    if (Wallet) {
-      const provider = Wallet.provider
-      if (provider) {
-        const address = publicAddress ?? '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266'
-        provider.getBalance(address).then((balance) => {
-          // convert a currency unit from wei to ether
-          const balanceInEth = ethers.utils.formatEther(balance)
-          setBalance(parseInt(balanceInEth));
-          setFetching(false);
-          console.log(`balance: ${balanceInEth} ETH`)
-        })
-      }
-    }
-  }
+
 
   useEffect(() => {
     if (publicAddress) {
@@ -152,15 +111,13 @@ function WalletView({
         setAccountActivities(accountActivityData)
       })
     }
-  }, [])
+  }, [userBalance])
 
 
   useEffect(() => {
     if (!publicAddress || !selectedChain) return;
     setNfts([]);
     setTokens([]);
-    setBalance(0);
-    getAccountTokens();
   }, []);
 
 
@@ -169,8 +126,6 @@ function WalletView({
     if (!publicAddress) return;
     setNfts([]);
     setTokens([]);
-    setBalance(0);
-    getAccountTokens();
   }, [selectedChain]);
 
   const handleChange = (event: React.SyntheticEvent, newValue: string) => {
@@ -207,9 +162,39 @@ function WalletView({
       </Container>
 
 
-      <Typography component="h1" variant="h4" sx={{ textAlign: 'center', padding: "10px 0px", width: '100%', margin: "20px 0" }}>
-        {(balance).toFixed(2)} {CHAINS_CONFIG["0x7a69"].ticker}
+
+      <Typography component="h1" variant="h4" sx={{ textAlign: 'center', padding: "10px 0px", width: '100%', marginBottom: "10px", marginTop: '15px' }}>
+        {
+          userBalanceLoading ? <CircularProgress size="2rem" /> : (userBalance).toFixed(2)
+        } {CHAINS_CONFIG["0x13881"].ticker}
+
+        <Tooltip sx={{ padding: 0, margin: 0 }} title={
+          <Box sx={{ wordBreak: 'break-word', padding: 0, margin: 0, height: "100%" }}>
+            <Typography sx={{ marginBottom: "4px", fontSize: '12px' }}>We are using Polygon test network, get MATICS from these faucet links!</Typography>
+            <Link href={"https://mumbaifaucet.com/"} target="_blank" underline="none" color='rgb(144, 202, 249)' sx={{ margin: 0, padding: 0 }}>
+              <Typography
+                sx={{ margin: 0, padding: 0 }}
+                noWrap={true}
+                color='inherit'
+                fontWeight='600'
+              >https://mumbaifaucet.com/</Typography>
+            </Link>
+            <Link href={"https://faucet.polygon.technology/"} target="_blank" underline="none" color='rgb(144, 202, 249)' sx={{ margin: 0, padding: 0 }}>
+              <Typography
+                sx={{ margin: 0, padding: 0 }}
+                noWrap={true}
+                color='inherit'
+                fontWeight='600'
+              >https://faucet.polygon.technology/</Typography>
+            </Link>
+          </Box>
+        }>
+          <Typography variant="caption" display="block" sx={{ width: 'fit-content', cursor: "pointer", ml: 'auto', mr: 'auto', color:'rgb(144, 202, 249)' }} gutterBottom>
+            Need MATICS?
+          </Typography>
+        </Tooltip>
       </Typography>
+
 
       <Box sx={{ width: '100%' }}>
         <Tabs value={value} onChange={handleChange} aria-label="basic tabs example" centered>

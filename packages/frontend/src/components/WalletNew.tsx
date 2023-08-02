@@ -1,5 +1,6 @@
-import { Box, CircularProgress, IconButton, Tooltip, Typography } from "@mui/material";
+import { Alert, Box, CircularProgress, IconButton, Link, Snackbar, Tooltip, Typography } from "@mui/material";
 import LogoutOutlinedIcon from '@mui/icons-material/LogoutOutlined';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import MainLayout from "./Layouts/MainLayout";
 import HeaderLayout from "./Layouts/HeaderLayout";
 import ContentLayout from "./Layouts/ContentLayout";
@@ -16,7 +17,7 @@ const WalletNew = () => {
           <LogoutOutlinedIcon />
         </IconButton>
         }
-        <Typography component="h1" variant="h5">
+        <Typography component="h1" variant="h5" sx={{ display: "flex", alignItems: "center" }}>
           Wallet
         </Typography>
         {(publicAddress && Wallet) &&

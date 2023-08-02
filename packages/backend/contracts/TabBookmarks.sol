@@ -1,28 +1,21 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/access/AccessControl.sol";
+contract TabBookmarks {
+    struct Bookmark {
+        bytes32 bookmarkId;
+        string url;
+    }
 
-struct Bookmark {
-    bytes32 bookmarkId;
-    string url;
-}
-
-struct Folder {
-    bytes32 folderId;
-    string name;
-    bytes32 color;
-    Bookmark[] bookmarks;
-}
-
-contract TabBookmarks is AccessControl {
-    bytes32 public constant FOLDER_MANAGER_ROLE = keccak256("FOLDER_MANAGER_ROLE");
-    bytes32 public constant BOOKMARK_MANAGER_ROLE = keccak256("BOOKMARK_MANAGER_ROLE");
-
-    mapping(address => Folder[]) private userFolders;
-    mapping(address => mapping(bytes32 => bool)) private folderExists;
-    mapping(address => mapping(bytes32 => mapping(bytes32 => bool)))
-        private bookmarkExists;
+    struct Folder {
+        bytes32 folderId;
+        string name;
+        bytes32 color;
+    }
+    
+    mapping(address => mapping(bytes32 => Folder)) private userFolder;
+    mapping(address => mapping(bytes32 => Bookmark[])) private folderBookmarks;
+    mapping(address => bytes32[]) private userFolderIds;
 
     event BookmarkAdded(bytes32 folderId, bytes32 bookmarkId);
     event BookmarkUpdated(bytes32 folderId, bytes32 bookmarkId);
@@ -36,70 +29,62 @@ contract TabBookmarks is AccessControl {
         bytes32 bookmarkId
     );
 
-    modifier validFolder(address user, bytes32 folderId) {
-        require(folderExists[user][folderId], "Folder does not exist");
-        _;
-    }
-
-    modifier validBookmark(
-        address user,
-        bytes32 folderId,
-        bytes32 bookmarkId
-    ) {
+    modifier validFolder(address _sender, bytes32 folderId) {
         require(
-            bookmarkExists[user][folderId][bookmarkId],
-            "Bookmark does not exist"
+            userFolder[_sender][folderId].folderId == folderId,
+            "Folder does not exist"
         );
         _;
     }
 
-    constructor() {
-        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
-    }
-
-    function isValidFolder(
-        address user,
-        bytes32 folderId
+    function isValidBookmark(
+        address _sender,
+        bytes32 _folderId,
+        bytes32 _bookmarkId
     ) private view returns (bool) {
-        return folderExists[user][folderId];
-    }
-
-    function isValidMove(
-        address user,
-        bytes32 fromFolderId,
-        bytes32 toFolderId,
-        bytes32 bookmarkId
-    ) private view returns (bool) {
-        return
-            isValidFolder(user, fromFolderId) &&
-            isValidFolder(user, toFolderId) &&
-            bookmarkExists[user][fromFolderId][bookmarkId] &&
-            !(bookmarkExists[user][toFolderId][bookmarkId]);
-    }
-
-    modifier validMove(
-        address user,
-        bytes32 fromFolderId,
-        bytes32 toFolderId,
-        bytes32 bookmarkId
-    ) {
-        require(
-            isValidMove(user, fromFolderId, toFolderId, bookmarkId),
-            "Invalid move"
-        );
-        _;
+        if (folderBookmarks[_sender][_folderId].length != 0) {
+            for (
+                uint256 i = 0;
+                i < folderBookmarks[_sender][_folderId].length;
+                i++
+            ) {
+                if (
+                    folderBookmarks[_sender][_folderId][i].bookmarkId ==
+                    _bookmarkId
+                ) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     function checkBookmarkExists(
-        bytes32 bookmarkId
+        address _sender,
+        bytes32 _bookmarkId
     ) private view returns (bool) {
-        Folder[] storage folders = userFolders[msg.sender];
-        for (uint256 i = 0; i < folders.length; i++) {
-            Bookmark[] storage bookmarks = folders[i].bookmarks;
+        for (uint256 i = 0; i < userFolderIds[_sender].length; i++) {
+            Bookmark[] memory bookmarks = folderBookmarks[_sender][
+                userFolderIds[_sender][i]
+            ];
             for (uint256 j = 0; j < bookmarks.length; j++) {
-                if (bookmarks[j].bookmarkId == bookmarkId) {
+                if (bookmarks[j].bookmarkId == _bookmarkId) {
                     return true;
                 }
+            }
+        }
+        return false;
+    }
+
+    function checkBookmarkInFolder(
+        address _sender,
+        bytes32 _folderId,
+        bytes32 _bookmarkId
+    ) private view returns (bool) {
+        Bookmark[] memory bookmarks = folderBookmarks[_sender][_folderId];
+        for (uint256 j = 0; j < bookmarks.length; j++) {
+            if (bookmarks[j].bookmarkId == _bookmarkId) {
+                return true;
             }
         }
         return false;
@@ -110,184 +95,204 @@ contract TabBookmarks is AccessControl {
         string memory _name,
         bytes32 _color
     ) public {
-        require(!folderExists[msg.sender][_folderId], "Folder already exists");
-        _setupRole(FOLDER_MANAGER_ROLE, msg.sender);
-        _setupRole(BOOKMARK_MANAGER_ROLE, msg.sender);
-        Folder[] storage folders = userFolders[msg.sender];
-        Folder storage newFolder = folders.push();
-        newFolder.folderId = _folderId;
-        newFolder.name = _name;
-        newFolder.color = _color;
-        folderExists[msg.sender][_folderId] = true;
+        require(msg.sender != address(0), "Invalid sender address");
+        require(
+            !(userFolder[msg.sender][_folderId].folderId == _folderId),
+            "Folder already exists"
+        );
+        userFolder[msg.sender][_folderId] = Folder(_folderId, _name, _color);
+        userFolderIds[msg.sender].push(_folderId);
         emit FolderAdded(_folderId);
     }
 
     function updateFolder(
-        bytes32 folderId,
+        bytes32 _folderId,
         string memory _name,
         bytes32 _color
-    ) public validFolder(msg.sender, folderId) {
-        Folder[] storage folders = userFolders[msg.sender];
-        for (uint256 i = 0; i < folders.length; i++) {
-            if (folders[i].folderId == folderId) {
-                require(hasRole(FOLDER_MANAGER_ROLE, msg.sender), "Not authorized to update folder");
-                folders[i].name = _name;
-                folders[i].color = _color;
-                emit FolderUpdated(folderId);
-                break;
-            }
-        }
+    ) public validFolder(msg.sender, _folderId) {
+        require(msg.sender != address(0), "Invalid sender address");
+        userFolder[msg.sender][_folderId] = Folder(_folderId, _name, _color);
     }
 
     function deleteFolder(
-        bytes32 folderId
-    ) public validFolder(msg.sender, folderId) {
-        Folder[] storage folders = userFolders[msg.sender];
-        uint256 folderIndex = folders.length;
-        for (uint256 i = 0; i < folders.length; i++) {
-            if (folders[i].folderId == folderId) {
-                folderIndex = i;
-                break;
+        bytes32 _folderId
+    ) public validFolder(msg.sender, _folderId) {
+        require(msg.sender != address(0), "Invalid sender address");
+
+        delete userFolder[msg.sender][_folderId];
+        delete folderBookmarks[msg.sender][_folderId];
+
+        uint256 indexToDelete = getUserFolderIndex(msg.sender, _folderId);
+
+        require(
+            indexToDelete < userFolderIds[msg.sender].length,
+            "Folder not found for the given user."
+        );
+
+        if (indexToDelete < userFolderIds[msg.sender].length - 1) {
+            // Shift the elements after the target index to the left
+            for (
+                uint256 i = indexToDelete;
+                i < userFolderIds[msg.sender].length - 1;
+                i++
+            ) {
+                userFolderIds[msg.sender][i] = userFolderIds[msg.sender][i + 1];
             }
         }
+        // Decrease the array's length to effectively remove the last element
+        userFolderIds[msg.sender].pop();
 
-        require(folderIndex < folders.length, "Folder does not exist");
-        require(hasRole(FOLDER_MANAGER_ROLE, msg.sender), "Not authorized to delete folder");
-
-        // Delete bookmarks related to the folder
-        Folder storage folderToDelete = folders[folderIndex];
-        Bookmark[] storage bookmarks = folderToDelete.bookmarks;
-        for (uint256 j = 0; j < bookmarks.length; j++) {
-            bookmarkExists[msg.sender][folderId][
-                bookmarks[j].bookmarkId
-            ] = false;
-        }
-
-        // Shift folders after the deleted folder one position up
-        for (uint256 k = folderIndex; k < folders.length - 1; k++) {
-            folders[k] = folders[k + 1];
-        }
-
-        // Remove the last folder from the array
-        folders.pop();
-
-        // Update the folderExists mapping
-        folderExists[msg.sender][folderId] = false;
-
-        emit FolderDeleted(folderId);
+        emit FolderDeleted(_folderId);
     }
 
     function addBookmark(
-        bytes32 folderId,
-        bytes32 bookmarkId,
-        string memory url
-    ) public validFolder(msg.sender, folderId) {
+        bytes32 _folderId,
+        bytes32 _bookmarkId,
+        string memory _url
+    ) public validFolder(msg.sender, _folderId) {
+        require(msg.sender != address(0), "Invalid sender address");
+        // Check if the bookmark already exists
         require(
-            !bookmarkExists[msg.sender][folderId][bookmarkId],
+            !checkBookmarkExists(msg.sender, _bookmarkId),
             "Bookmark already exists"
         );
-        require(hasRole(BOOKMARK_MANAGER_ROLE, msg.sender), "Not authorized to add bookmark");
-
-        // Check if the bookmark already exists in any folder
-        require(
-            !checkBookmarkExists(bookmarkId),
-            "Bookmark already exists in another folder"
+        folderBookmarks[msg.sender][_folderId].push(
+            Bookmark(_bookmarkId, _url)
         );
-        Folder storage folder = getFolder(msg.sender, folderId);
-        folder.bookmarks.push(Bookmark(bookmarkId, url));
-        bookmarkExists[msg.sender][folderId][bookmarkId] = true;
-        emit BookmarkAdded(folderId, bookmarkId);
+        emit BookmarkAdded(_folderId, _bookmarkId);
     }
 
     function deleteBookmark(
-        bytes32 folderId,
-        bytes32 bookmarkId
-    )
-        public
-        validFolder(msg.sender, folderId)
-        validBookmark(msg.sender, folderId, bookmarkId)
-    {
-        Folder storage folder = getFolder(msg.sender, folderId);
-        Bookmark[] storage bookmarks = folder.bookmarks;
-        uint256 bookmarkIndex = bookmarks.length;
+        bytes32 _folderId,
+        bytes32 _bookmarkId
+    ) public validFolder(msg.sender, _folderId) {
+        require(msg.sender != address(0), "Invalid sender address");
+        require(
+            isValidBookmark(msg.sender, _folderId, _bookmarkId),
+            "Bookmark not exist"
+        );
 
-        for (uint256 i = 0; i < bookmarks.length; i++) {
-            if (bookmarks[i].bookmarkId == bookmarkId) {
-                bookmarkIndex = i;
-                break;
-            }
-        }
+        uint256 indexToDelete = getBookmarkIndex(
+            msg.sender,
+            _folderId,
+            _bookmarkId
+        );
 
-        require(bookmarkIndex < bookmarks.length, "Bookmark does not exist");
-        require(hasRole(BOOKMARK_MANAGER_ROLE, msg.sender), "Not authorized to delete bookmark");
+        require(
+            indexToDelete < folderBookmarks[msg.sender][_folderId].length,
+            "Folder not found for the given user."
+        );
 
         // Shift bookmarks after the deleted bookmark one position up
-        for (uint256 k = bookmarkIndex; k < bookmarks.length - 1; k++) {
-            bookmarks[k] = bookmarks[k + 1];
+        for (
+            uint256 k = indexToDelete;
+            k < folderBookmarks[msg.sender][_folderId].length - 1;
+            k++
+        ) {
+            folderBookmarks[msg.sender][_folderId][k] = folderBookmarks[
+                msg.sender
+            ][_folderId][k + 1];
         }
 
         // Decrease the length of the array to remove the last element
-        bookmarks.pop();
+        folderBookmarks[msg.sender][_folderId].pop();
 
-        // Update the bookmarkExists mapping
-        bookmarkExists[msg.sender][folderId][bookmarkId] = false;
-
-        emit BookmarkDeleted(folderId, bookmarkId);
+        emit BookmarkDeleted(_folderId, _bookmarkId);
     }
 
     function moveBookmark(
-        bytes32 fromFolderId,
-        bytes32 toFolderId,
-        bytes32 bookmarkId
-    ) public validMove(msg.sender, fromFolderId, toFolderId, bookmarkId) {
-        Folder storage fromFolder = getFolder(msg.sender, fromFolderId);
-        Folder storage toFolder = getFolder(msg.sender, toFolderId);
-        Bookmark[] storage fromBookmarks = fromFolder.bookmarks;
-        Bookmark[] storage toBookmarks = toFolder.bookmarks;
+        bytes32 _fromFolderId,
+        bytes32 _toFolderId,
+        bytes32 _bookmarkId
+    )
+        public
+        validFolder(msg.sender, _fromFolderId)
+        validFolder(msg.sender, _toFolderId)
+    {
+        require(msg.sender != address(0), "Invalid sender address");
+        require(
+            checkBookmarkInFolder(msg.sender, _fromFolderId, _bookmarkId),
+            "Bookmark not exist in source folder"
+        );
+        require(
+            !checkBookmarkInFolder(msg.sender, _toFolderId, _bookmarkId),
+            "Bookmark already exist in destination folder"
+        );
+        uint256 bookmarkIndex = getBookmarkIndex(
+            msg.sender,
+            _fromFolderId,
+            _bookmarkId
+        );
 
-        uint256 bookmarkIndex = fromBookmarks.length;
-        Bookmark memory bookmark;
-        for (uint256 i = 0; i < fromBookmarks.length; i++) {
-            if (fromBookmarks[i].bookmarkId == bookmarkId) {
-                bookmark = fromBookmarks[i];
-                bookmarkIndex = i;
-                break;
-            }
-        }
+        require(
+            bookmarkIndex < folderBookmarks[msg.sender][_fromFolderId].length,
+            "Folder not found for the given user."
+        );
 
-        require(hasRole(BOOKMARK_MANAGER_ROLE, msg.sender), "Not authorized to move bookmark");
+        folderBookmarks[msg.sender][_toFolderId].push(
+            folderBookmarks[msg.sender][_fromFolderId][bookmarkIndex]
+        );
 
         // Shift bookmarks after the deleted bookmark one position up
-        for (uint256 k = bookmarkIndex; k < fromBookmarks.length - 1; k++) {
-            fromBookmarks[k] = fromBookmarks[k + 1];
+        for (
+            uint256 k = bookmarkIndex;
+            k < folderBookmarks[msg.sender][_fromFolderId].length - 1;
+            k++
+        ) {
+            folderBookmarks[msg.sender][_fromFolderId][k] = folderBookmarks[
+                msg.sender
+            ][_fromFolderId][k + 1];
         }
 
         // Decrease the length of the array to remove the last element
-        fromBookmarks.pop();
+        folderBookmarks[msg.sender][_fromFolderId].pop();
 
-        toBookmarks.push(bookmark);
-
-        bookmarkExists[msg.sender][toFolderId][bookmarkId] = true;
-        bookmarkExists[msg.sender][fromFolderId][bookmarkId] = false;
-
-        emit BookmarkMoved(fromFolderId, toFolderId, bookmarkId);
+        emit BookmarkMoved(_fromFolderId, _toFolderId, _bookmarkId);
     }
 
-    function getAllFoldersBookmarks() public view returns (Folder[] memory) {
-        return userFolders[msg.sender];
+    function getAllFolders() public view returns (Folder[] memory) {
+        Folder[] memory folders = new Folder[](
+            userFolderIds[msg.sender].length
+        );
+        for (uint256 i = 0; i < userFolderIds[msg.sender].length; i++) {
+            folders[i] = userFolder[msg.sender][userFolderIds[msg.sender][i]];
+        }
+        return folders;
     }
 
-    function getFolder(
+    function getBookmarksByFolder(
+        bytes32 _folderId
+    ) public view returns (Bookmark[] memory) {
+        if (folderBookmarks[msg.sender][_folderId].length != 0) {
+            return folderBookmarks[msg.sender][_folderId];
+        }
+        return new Bookmark[](0);
+    }
+
+    // Helper function to get the index of a folderId in the userFolderIds array
+    function getUserFolderIndex(
         address user,
         bytes32 folderId
-    ) private view returns (Folder storage) {
-        Folder[] storage folders = userFolders[user];
-        for (uint256 i = 0; i < folders.length; i++) {
-            if (folders[i].folderId == folderId) {
-                return folders[i];
+    ) private view returns (uint256) {
+        for (uint256 i = 0; i < userFolderIds[user].length; i++) {
+            if (userFolderIds[user][i] == folderId) {
+                return i;
             }
         }
-        revert("Folder does not exist");
+        return userFolderIds[user].length;
+    }
+
+    function getBookmarkIndex(
+        address user,
+        bytes32 _folderId,
+        bytes32 _bookmarkId
+    ) private view returns (uint256) {
+        Bookmark[] memory bookmarks = folderBookmarks[user][_folderId];
+        for (uint256 i = 0; i < bookmarks.length; i++) {
+            if (bookmarks[i].bookmarkId == _bookmarkId) {
+                return i;
+            }
+        }
+        return bookmarks.length;
     }
 }
-

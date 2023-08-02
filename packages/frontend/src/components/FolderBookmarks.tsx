@@ -18,7 +18,6 @@ const FolderBookmarks = () => {
     const [open, setOpen] = useState(false);
     const [openAddBookmark, setOpenAddBookmark] = useState(false)
     const folderBookmarks = tabBookmarks.find(bookmark => bookmark.folderId ===  folderId)
-    console.log("folderBookmarks", folderBookmarks)
     return (
         <MainLayout>
             <HeaderLayout>

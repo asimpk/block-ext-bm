@@ -10,13 +10,17 @@ const { ethers } = hre;
 async function main() {
 
   const TabBookmarks = await ethers.getContractFactory("TabBookmarks")
+  const CustomBookmarks = await ethers.getContractFactory("CustomBookmarks")
 
   const tabBookmarks = await TabBookmarks.deploy();
+  const customBookmarks = await CustomBookmarks.deploy();
 
   await tabBookmarks.waitForDeployment();
+  await customBookmarks.waitForDeployment();
+
 
   console.log(
-    `Lock with deployed to ${await tabBookmarks.getAddress()}`
+    `Lock with deployed to ${await tabBookmarks.getAddress()} ${await customBookmarks.getAddress()}`
   );
 }
 

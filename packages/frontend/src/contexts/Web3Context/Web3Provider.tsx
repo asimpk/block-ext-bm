@@ -1,46 +1,55 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Web3Context } from "./Web3Context";
+import { ContractName, Web3Context } from "./Web3Context";
 import { CHAINS_CONFIG } from "../../chains";
 import { Wallet, ethers } from "ethers";
 import EthCrypto from 'eth-crypto';
 import { nanoid } from 'nanoid'
-import { tabBookmarksAbi } from '../../abis'
+import { contractsAbi } from '../../abis'
 
 import { decryptMnemonic, encryptMnemonic, generateSalt, base64StringToArrayBuffer, arrayBufferToBase64String, generatePasswordHash, generateUserKeyFromMnemonic, deriveWrappingKey, getWrappedKey, getUnwrappedKey, uint8ArrayToBase64, base64ToUint8Array } from "./secure";
-import useAddBookmarkBtn from "../../hooks/useAddBookmarkBtn";
+import { TabBookmarksTypes } from "../StateConrext/StateContext";
+
 
 
 interface ContractData {
     abi: any;
     address: string;
+    name: ContractName
 }
+
+// const CONTRACT_ADDRESS_MUMBAI = "0x2e9793f057b8efc18e14630aebe8d86b2f3d26a4"
+const CONTRACT_ADDRESS_TabBookMarks = "0x2b90522b272d61f56e6272ed3d371684c9faced5"
+const CONTRACT_ADDRESS_CUSTOMBookMarks = "0x74bdd566965aeec114b6f3666cf9cbea0f381e9b"
 
 export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
     const [wallet, setWallet] = useState<Wallet>()
     const [publicAddress, setPublicAddress] = useState<string>()
     const [unWrappedKey, setUnWrappedKey] = useState<CryptoKey>()
-    const [contractInstances, setContractInstances] = useState<ethers.Contract[] | null>(null);
+    // const [contractInstances, setContractInstances] = useState<{ name: ContractName, contract: ethers.Contract }[] | null>(null);
+    const [contractInstances, setContractInstances] = useState<{ [k in ContractName]: ethers.Contract } | null>(null);
     const [showConfirm, setShowConfirm] = useState(false)
     const [transaction, setTransaction] = useState<{ transaction: ethers.providers.TransactionRequest, method: string, totalCost: string | undefined }>()
     const [status, setStatus] = useState('idle');
+    const [loadingTransaction, setLoadingTransaction] = useState(false)
+    const [userBalance, setUserBalance] = useState<number>(0)
+    const [userBalanceLoading, setUserBalanceLoading] = useState(false)
     const [showLoading, setShowLoading] = useState(true)
     const navigate = useNavigate();
 
-
     const getContractInstances = async (
-        WalletTemp: Wallet,
+        WalletTemp: ethers.Wallet,
         contractData: ContractData[]
-    ): Promise<ethers.Contract[]> => {
+    ): Promise<{ [k in ContractName]: ethers.Contract }[]> => {
         const contractInstances = await Promise.all(
             contractData.map(async (contract) => {
                 const deployedContract = new ethers.Contract(contract.address, contract.abi, WalletTemp);
-                return deployedContract;
+                const contractName = contract.name;
+                return { [contractName]: deployedContract } as Record<ContractName, ethers.Contract>;
             })
         );
         return contractInstances;
     };
-
 
     useEffect(() => {
         chrome && chrome.storage.session.get(["sessionkey"]).then(async (result) => {
@@ -66,7 +75,7 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
                     let privateKey
                     const unWrappedKey = await getUnwrappedKey(retrievedwrappedKey, retrievedSessionK)
                     const decryptedMnemonic = await decryptMnemonic(unWrappedKey, resultLocal.encryptMnemonicStore)
-                    const chain = CHAINS_CONFIG["0x7a69"];
+                    const chain = CHAINS_CONFIG["0x13881"];
                     const provider1 = new ethers.providers.JsonRpcProvider(chain.rpcUrl);
                     if (decryptedMnemonic.split(" ").length === 12) {
                         privateKey = ethers.Wallet.fromMnemonic(decryptedMnemonic).privateKey;
@@ -77,16 +86,38 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
                     const publicKey = WalletTemp?.address;
                     setUnWrappedKey(unWrappedKey)
                     setPublicAddress(publicKey)
-                    setWallet(WalletTemp)
+                    setWallet(WalletTemp);
+                    getAccountTokens(WalletTemp, publicKey)
                     const contractsData: ContractData[] = [
                         // Add contract ABIs and addresses here
                         {
-                            abi: tabBookmarksAbi,
-                            address: '0x5FbDB2315678afecb367f032d93F642f64180aa3'
+                            abi: contractsAbi.tabBookmarksAbi,
+                            address: CONTRACT_ADDRESS_TabBookMarks,
+                            name: "tabBookmarks"
+                        },
+                        {
+                            abi: contractsAbi.customBookmarksAbi,
+                            address: CONTRACT_ADDRESS_CUSTOMBookMarks,
+                            name: "customBookmarks"
                         }
                     ];
                     const contracts = await getContractInstances(WalletTemp, contractsData);
-                    setContractInstances(contracts)
+
+                    // // Convert the contracts array into an array of objects with the desired structure
+                    // const contractArray = Object.entries(contracts).map(([name, contract]) => ({
+                    //     name: name as ContractName,
+                    //     contract: contract[name as ContractName],
+                    // }));
+
+                    // setContractInstances(contractArray)
+
+                    const contractObject = contracts.reduce((acc, contract) => {
+                        const name = Object.keys(contract)[0] as ContractName;
+                        acc[name] = contract[name];
+                        return acc;
+                    }, {} as { [k in ContractName]: ethers.Contract });
+                    
+                    setContractInstances(contractObject);
                     navigate("/wallet");
 
                 }
@@ -121,18 +152,23 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
             const unWrappedKey = await getUnwrappedKey(wrappedKey, wrappingKey)
 
             const encryptMnemonicStore = await encryptMnemonic(unWrappedKey, privateAccount);
-            const chain = CHAINS_CONFIG["0x7a69"];
+            const chain = CHAINS_CONFIG["0x13881"];
             const provider = new ethers.providers.JsonRpcProvider(chain.rpcUrl);
             // const privateKey = ethers.Wallet.fromMnemonic(seedPhrase).privateKey;
             const privateKey = privateAccount;
-            console.log("privateKey1", privateKey)
             const WalletTemp = new ethers.Wallet(privateKey, provider);
 
             const contractsData: ContractData[] = [
                 // Add contract ABIs and addresses here
                 {
-                    abi: tabBookmarksAbi,
-                    address: '0x5FbDB2315678afecb367f032d93F642f64180aa3'
+                    abi: contractsAbi.tabBookmarksAbi,
+                    address: CONTRACT_ADDRESS_TabBookMarks,
+                    name: "tabBookmarks"
+                },
+                {
+                    abi: contractsAbi.customBookmarksAbi,
+                    address: CONTRACT_ADDRESS_CUSTOMBookMarks,
+                    name: "customBookmarks"
                 }
             ];
 
@@ -145,10 +181,17 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
             await chrome.storage.local.set({ encryptMnemonicStore, passwordHash, wrappedKeyString, userSalt: userSaltString })
             chrome.storage.session.set({ sessionkey }).then(async () => {
                 const contracts = await getContractInstances(WalletTemp, contractsData);
+
+                const contractObject = contracts.reduce((acc, contract) => {
+                    const name = Object.keys(contract)[0] as ContractName;
+                    acc[name] = contract[name];
+                    return acc;
+                }, {} as { [k in ContractName]: ethers.Contract });
                 setUnWrappedKey(unWrappedKey)
                 setPublicAddress(publicKey)
                 setWallet(WalletTemp)
-                setContractInstances(contracts)
+                getAccountTokens(WalletTemp, publicKey)
+                setContractInstances(contractObject)
                 navigate("/wallet")
             })
         } else {
@@ -160,15 +203,21 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
             const unWrappedKey = await getUnwrappedKey(wrappedKey, wrappingKey)
 
             const encryptMnemonicStore = await encryptMnemonic(unWrappedKey, seedPhrase);
-            const chain = CHAINS_CONFIG["0x7a69"];
+            const chain = CHAINS_CONFIG["0x13881"];
             const provider = new ethers.providers.JsonRpcProvider(chain.rpcUrl);
             const privateKey = ethers.Wallet.fromMnemonic(seedPhrase).privateKey;
             const WalletTemp = new ethers.Wallet(privateKey, provider);
             const contractsData: ContractData[] = [
                 // Add contract ABIs and addresses here
                 {
-                    abi: tabBookmarksAbi,
-                    address: '0x5FbDB2315678afecb367f032d93F642f64180aa3'
+                    abi: contractsAbi.tabBookmarksAbi,
+                    address: CONTRACT_ADDRESS_TabBookMarks,
+                    name: "tabBookmarks"
+                },
+                {
+                    abi: contractsAbi.customBookmarksAbi,
+                    address: CONTRACT_ADDRESS_CUSTOMBookMarks,
+                    name: "customBookmarks"
                 }
             ];
             const publicKey = WalletTemp?.address;
@@ -179,10 +228,16 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
             await chrome.storage.local.set({ encryptMnemonicStore, passwordHash, wrappedKeyString, userSalt: userSaltString })
             chrome.storage.session.set({ sessionkey }).then(async () => {
                 const contracts = await getContractInstances(WalletTemp, contractsData);
+                const contractObject = contracts.reduce((acc, contract) => {
+                    const name = Object.keys(contract)[0] as ContractName;
+                    acc[name] = contract[name];
+                    return acc;
+                }, {} as { [k in ContractName]: ethers.Contract });
                 setUnWrappedKey(unWrappedKey)
                 setPublicAddress(publicKey)
                 setWallet(WalletTemp)
-                setContractInstances(contracts)
+                getAccountTokens(WalletTemp, publicKey)
+                setContractInstances(contractObject)
                 navigate("/wallet")
             })
         }
@@ -190,13 +245,16 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
     }
 
     const disconnectWallet = () => {
-        chrome && chrome.storage.session.remove(["sessionkey"]).then((result) => {
+        chrome.storage.session.remove(["sessionkey"]).then((result) => {
+            wallet?.provider.off("block")
             setPublicAddress(undefined)
             setWallet(undefined)
-            console.log("disconnectWallet", "success")
+            setContractInstances(null)
+            setUnWrappedKey(undefined)
+            setPublicAddress(undefined)
             navigate("/")
         }).catch(error => {
-            console.log("disconnectWallet", "error")
+            console.log("disconnectWallet", error)
         });
     }
 
@@ -210,7 +268,7 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
             const retrievedwrappedKey = base64StringToArrayBuffer(wrappedKeyString);
             const unWrappedKey = await getUnwrappedKey(retrievedwrappedKey, wrappingKey)
             const decryptedMnemonic = await decryptMnemonic(unWrappedKey, encryptMnemonicStore)
-            const chain = CHAINS_CONFIG["0x7a69"];
+            const chain = CHAINS_CONFIG["0x13881"];
             const provider = new ethers.providers.JsonRpcProvider(chain.rpcUrl);
             if (decryptedMnemonic.split(" ").length === 12) {
                 privateKey = ethers.Wallet.fromMnemonic(decryptedMnemonic).privateKey;
@@ -221,8 +279,14 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
             const contractsData: ContractData[] = [
                 // Add contract ABIs and addresses here
                 {
-                    abi: tabBookmarksAbi,
-                    address: '0x5FbDB2315678afecb367f032d93F642f64180aa3'
+                    abi: contractsAbi.tabBookmarksAbi,
+                    address: CONTRACT_ADDRESS_TabBookMarks,
+                    name: "tabBookmarks"
+                },
+                {
+                    abi: contractsAbi.customBookmarksAbi,
+                    address: CONTRACT_ADDRESS_CUSTOMBookMarks,
+                    name: "customBookmarks"
                 }
             ];
             const publicKey = WalletTemp?.address;
@@ -230,14 +294,19 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
             const sessionkey = arrayBufferToBase64String(buffers);
             chrome.storage.session.set({ sessionkey }).then(async () => {
                 const contracts = await getContractInstances(WalletTemp, contractsData);
+                const contractObject = contracts.reduce((acc, contract) => {
+                    const name = Object.keys(contract)[0] as ContractName;
+                    acc[name] = contract[name];
+                    return acc;
+                }, {} as { [k in ContractName]: ethers.Contract });
                 setUnWrappedKey(unWrappedKey)
                 setPublicAddress(publicKey)
                 setWallet(WalletTemp)
-                setContractInstances(contracts)
+                getAccountTokens(WalletTemp, publicKey)
+                setContractInstances(contractObject)
                 navigate("/wallet")
             })
         } else {
-            console.log("encrypted store not found")
             navigate("/create-account")
         }
 
@@ -314,24 +383,37 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
     }
 
     // Function to prepare a transaction
-    async function prepareTransaction(contract: ethers.Contract, wallet: Wallet, methodName: string, methodParams: any[]): Promise<ethers.providers.TransactionRequest> {
+    const prepareTransaction = async (contract: ethers.Contract, wallet: Wallet, methodName: string, methodParams: any[]): Promise<ethers.providers.TransactionRequest> => {
 
         // Prepare the transaction data
         const method = contract.interface.getFunction(methodName);
         const data = contract.interface.encodeFunctionData(method, methodParams);
 
         // Estimate gas limit
-        const estimatedGas = await contract.estimateGas[methodName](...methodParams);
+        const estimatedGas = await contract.estimateGas[methodName](...methodParams)
 
+        const gasPriceIncreasePercentage = 1.1; // 10% increase
         // Get the gas price
         const gasPrice = await wallet.provider.getGasPrice();
+        const currentNonce = await wallet.provider.getTransactionCount(wallet.address);
 
         // Create the transaction object
         const transaction: ethers.providers.TransactionRequest = {
             to: contract.address,
             data: data,
             gasLimit: estimatedGas,
-            gasPrice: gasPrice,
+            gasPrice: gasPrice
+        };
+        return transaction;
+    }
+
+    // Function to prepare a transaction
+    async function prepareTransferTransaction(wallet: Wallet, toAddress: string, amount: string): Promise<ethers.providers.TransactionRequest> {
+
+        // Create the transaction object
+        const transaction: ethers.providers.TransactionRequest = {
+            to: toAddress,
+            value: ethers.utils.parseEther(amount)
         };
         return transaction;
     }
@@ -344,100 +426,234 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
         }
     }
 
-
-
-    const createFolder = async (folderName: string) => {
+    const transferTokens = async (toAddress: string, amount: string) => {
         if (contractInstances && wallet) {
-            const [tabBookmarks] = contractInstances;
+            setLoadingTransaction(true);
+            setShowConfirm(true)
+            try {
+                const transaction = await prepareTransferTransaction(wallet, toAddress, amount);
+                if (transaction) {
+                    const totalCost = getTotalCost(transaction);
+                    setTransaction({ transaction, method: "Transfer Tokens", totalCost });
+                }
+                setLoadingTransaction(false);
+            } catch (error) {
+                setLoadingTransaction(false);
+                setShowConfirm(false);
+                setTransaction(undefined)
+            }
+        }
+    }
+
+    const getAccountTokens = async (wallet: Wallet, publicAddress: string) => {
+        if (wallet && publicAddress) {
+            const provider = wallet.provider
+            if (provider) {
+                setUserBalanceLoading(true)
+                try {
+                    const balance = await provider.getBalance(publicAddress)
+                    const balanceInEth = ethers.utils.formatEther(balance)
+                    setUserBalance(parseFloat(balanceInEth))
+                    setUserBalanceLoading(false)
+                } catch (error) {
+                    setUserBalanceLoading(false)
+                }
+            }
+        }
+    }
+
+
+
+    const createFolder = async (contractName: ContractName,  folderName: string) => {
+        if (contractInstances && wallet) {
+            const contract = contractInstances[contractName];
             const uuid = nanoid()
             const encryptedFolderName = await getEncryptedString(wallet, folderName)
             const folderId = ethers.utils.formatBytes32String(uuid);
             const color = ethers.utils.formatBytes32String("#000000");
-            const transaction = await prepareTransaction(tabBookmarks, wallet, "addFolder", [folderId, encryptedFolderName, color])
-            if (transaction) {
-                const totalCost = getTotalCost(transaction)
-                setTransaction({ transaction, method: "Create Folder", totalCost });
-                setShowConfirm(true)
+            setLoadingTransaction(true);
+            setShowConfirm(true)
+            try {
+                const transaction = await prepareTransaction(contract, wallet, "addFolder", [folderId, encryptedFolderName, color]);
+                if (transaction) {
+                    const totalCost = getTotalCost(transaction);
+                    setTransaction({ transaction, method: "Add Folder", totalCost });
+                }
+                setLoadingTransaction(false);
+            } catch (error) {
+                console.log("error", error)
+                setLoadingTransaction(false);
+                setShowConfirm(false);
+                setTransaction(undefined)
             }
         }
     }
 
-    const deleteFolder = async (deltFolderId: string) => {
+    const deleteFolder = async (contractName: ContractName, deltFolderId: string) => {
         if (contractInstances && wallet) {
-            const [tabBookmarks] = contractInstances;
+            const contract = contractInstances[contractName];
             const folderId = ethers.utils.formatBytes32String(deltFolderId);
-            const transaction = await prepareTransaction(tabBookmarks, wallet, "deleteFolder", [folderId])
-            if (transaction) {
-                const totalCost = getTotalCost(transaction)
-                setTransaction({ transaction, method: "Delete Folder", totalCost });
-                setShowConfirm(true)
+            setLoadingTransaction(true);
+            setShowConfirm(true)
+            try {
+                const transaction = await prepareTransaction(contract, wallet, "deleteFolder", [folderId]);
+                if (transaction) {
+                    const totalCost = getTotalCost(transaction);
+                    setTransaction({ transaction, method: "Delete Folder", totalCost });
+                }
+                setLoadingTransaction(false);
+            } catch (error) {
+                setLoadingTransaction(false);
+                setShowConfirm(false);
+                setTransaction(undefined)
             }
         }
     }
 
-    const updateFolder = async (deltFolderId: string) => {
+    const updateFolder = async (contractName: ContractName, deltFolderId: string) => {
         if (contractInstances && wallet) {
-            const [tabBookmarks] = contractInstances;
+            const contract = contractInstances[contractName];
             const folderId = ethers.utils.formatBytes32String(deltFolderId);
-            const name = 'updated name';
+            const encryptedFolderName = await getEncryptedString(wallet, 'updated name')
             const color = ethers.utils.formatBytes32String("#000000 updated");
-            const transaction = await prepareTransaction(tabBookmarks, wallet, "updateFolder", [folderId, name, color])
-            if (transaction) {
-                const totalCost = getTotalCost(transaction)
-                setTransaction({ transaction, method: "Update Folder", totalCost });
-                setShowConfirm(true)
+            setLoadingTransaction(true);
+            setShowConfirm(true)
+            try {
+                const transaction = await prepareTransaction(contract, wallet, "updateFolder", [folderId, encryptedFolderName, color]);
+                if (transaction) {
+                    const totalCost = getTotalCost(transaction);
+                    setTransaction({ transaction, method: "Update Folder", totalCost });
+                }
+                setLoadingTransaction(false);
+            } catch (error) {
+                setLoadingTransaction(false);
+                setShowConfirm(false);
+                setTransaction(undefined)
             }
         }
     }
 
-    const addBookmark = async (folderId: string, url: string) => {
+    const addTabBookmark = async (folderId: string, url: string) => {
         if (contractInstances && wallet) {
-            const [tabBookmarks] = contractInstances;
+            const tabBookmarks = contractInstances["tabBookmarks"];
             const uuid = nanoid();
             const encryptedUrl = await getEncryptedString(wallet, url)
             const folderIdBytes = ethers.utils.formatBytes32String(folderId);
             const bookmarkId = ethers.utils.formatBytes32String(uuid);
-            const transaction = await prepareTransaction(tabBookmarks, wallet, "addBookmark", [folderIdBytes, bookmarkId, encryptedUrl])
-            if (transaction) {
-                const totalCost = getTotalCost(transaction)
-                setTransaction({ transaction, method: "Add Bookmark", totalCost });
-                setShowConfirm(true)
+            setLoadingTransaction(true);
+            setShowConfirm(true)
+            try {
+                const transaction = await prepareTransaction(tabBookmarks, wallet, "addBookmark", [folderIdBytes, bookmarkId, encryptedUrl]);
+                if (transaction) {
+                    const totalCost = getTotalCost(transaction);
+                    setTransaction({ transaction, method: "Add Bookmark", totalCost });
+                }
+                setLoadingTransaction(false);
+            } catch (error) {
+                setLoadingTransaction(false);
+                setShowConfirm(false);
+                setTransaction(undefined)
             }
         }
     }
 
-    const deleteBookmark = async (folderId: string, bookmarkId: string) => {
+    const addCustomBookmark = async (folderId: string, url: string, title:string) => {
         if (contractInstances && wallet) {
-            const [tabBookmarks] = contractInstances;
+            const customBookmarks = contractInstances["customBookmarks"];
+            const uuid = nanoid();
+            const encryptedUrl = await getEncryptedString(wallet, url);
+            const encryptedTitle = await getEncryptedString(wallet, title);
+            const folderIdBytes = ethers.utils.formatBytes32String(folderId);
+            const bookmarkId = ethers.utils.formatBytes32String(uuid);
+            setLoadingTransaction(true);
+            setShowConfirm(true)
+            try {
+                const transaction = await prepareTransaction(customBookmarks, wallet, "addBookmark", [folderIdBytes, bookmarkId, encryptedUrl, encryptedTitle]);
+                if (transaction) {
+                    const totalCost = getTotalCost(transaction);
+                    setTransaction({ transaction, method: "Add Custom Bookmark", totalCost });
+                }
+                setLoadingTransaction(false);
+            } catch (error) {
+                setLoadingTransaction(false);
+                setShowConfirm(false);
+                setTransaction(undefined)
+            }
+        }
+    }
+
+    const updateCustomBookmark = async (folderId: string, bookmarkId: string, url: string, title:string) => {
+        if (contractInstances && wallet) {
+            const customBookmarks = contractInstances["customBookmarks"];
+            const encryptedUrl = await getEncryptedString(wallet, url);
+            const encryptedTitle = await getEncryptedString(wallet, title);
+            const folderIdBytes = ethers.utils.formatBytes32String(folderId);
+            const bookmarkIdBytes = ethers.utils.formatBytes32String(bookmarkId);
+            setLoadingTransaction(true);
+            setShowConfirm(true)
+            try {
+                const transaction = await prepareTransaction(customBookmarks, wallet, "updateBookmark", [folderIdBytes, bookmarkIdBytes, encryptedUrl, encryptedTitle]);
+                if (transaction) {
+                    const totalCost = getTotalCost(transaction);
+                    setTransaction({ transaction, method: "Update Custom Bookmark", totalCost });
+                }
+                setLoadingTransaction(false);
+            } catch (error) {
+                setLoadingTransaction(false);
+                setShowConfirm(false);
+                setTransaction(undefined)
+            }
+        }
+    }
+
+    const deleteBookmark = async (contractName: ContractName, folderId: string, bookmarkId: string) => {
+        if (contractInstances && wallet) {
+            const contract = contractInstances[contractName];
             const bytesFolderId = ethers.utils.formatBytes32String(folderId);
             const bytesBookmarkId = ethers.utils.formatBytes32String(bookmarkId);
-            const transaction = await prepareTransaction(tabBookmarks, wallet, "deleteBookmark", [bytesFolderId, bytesBookmarkId])
-            if (transaction) {
-                const totalCost = getTotalCost(transaction)
-                setTransaction({ transaction, method: "Delete Folder", totalCost });
-                setShowConfirm(true)
+            setLoadingTransaction(true);
+            setShowConfirm(true)
+            try {
+                const transaction = await prepareTransaction(contract, wallet, "deleteBookmark", [bytesFolderId, bytesBookmarkId]);
+                if (transaction) {
+                    const totalCost = getTotalCost(transaction);
+                    setTransaction({ transaction, method: "Delete Bookmark", totalCost });
+                }
+                setLoadingTransaction(false);
+            } catch (error) {
+                setLoadingTransaction(false);
+                setShowConfirm(false);
+                setTransaction(undefined)
             }
         }
     }
 
-    const moveBookmark = async (fromFolderId: string, toFolderId: string, bookmarkId: string) => {
+    const moveBookmark = async (contractName: ContractName, fromFolderId: string, toFolderId: string, bookmarkId: string) => {
         if (contractInstances && wallet) {
-            const [tabBookmarks] = contractInstances;
+            const contract = contractInstances[contractName];
             const bytesFromFolderId = ethers.utils.formatBytes32String(fromFolderId);
             const bytesToFolderId = ethers.utils.formatBytes32String(toFolderId);
             const bytesBookmarkId = ethers.utils.formatBytes32String(bookmarkId);
-            const transaction = await prepareTransaction(tabBookmarks, wallet, "moveBookmark", [bytesFromFolderId, bytesToFolderId, bytesBookmarkId])
-            if (transaction) {
-                const totalCost = getTotalCost(transaction)
-                setTransaction({ transaction, method: "Move Bookmark", totalCost });
-                setShowConfirm(true)
+
+            setLoadingTransaction(true);
+            setShowConfirm(true)
+            try {
+                const transaction = await prepareTransaction(contract, wallet, "moveBookmark", [bytesFromFolderId, bytesToFolderId, bytesBookmarkId])
+                if (transaction) {
+                    const totalCost = getTotalCost(transaction);
+                    setTransaction({ transaction, method: "Move Bookmark", totalCost });
+                }
+                setLoadingTransaction(false);
+            } catch (error) {
+                setLoadingTransaction(false);
+                setShowConfirm(false);
+                setTransaction(undefined)
             }
         }
     }
 
     const setAccountActivities = (publicAddress: string, methodName: string, transactionHash: string, status: boolean) => {
         // Retrieve the array from Chrome local storage
-        console.log("setAccountActivities", publicAddress)
         chrome.storage.local.get(publicAddress, function (result) {
             // Check if the "accountActivity" key exists in local storage
             // If it doesn't exist, initialize it as an empty array
@@ -450,11 +666,10 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
             accountActivityData.unshift(newActivity);
 
             // Now, you have the updated array with the new object added at the front
-            console.log(accountActivityData);
 
             // Save the updated array back to Chrome local storage
             chrome.storage.local.set({ [publicAddress]: accountActivityData }, function () {
-                console.log("Data saved successfully!");
+                console.log("");
             });
         });
 
@@ -462,16 +677,20 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
 
     const confirmTransaction = async () => {
         if (wallet && transaction && transaction?.transaction && publicAddress) {
-            setShowConfirm(false)
-            setStatus('pending')
-            const response = await wallet.sendTransaction(transaction?.transaction);
-            const receiept = await response.wait();
-            if (receiept?.status) {
-                console.log("confirmTransaction", receiept, response, transaction);
-                setAccountActivities(publicAddress, transaction.method, receiept?.transactionHash, true)
-                setStatus('confirmed')
-            } else {
-                setAccountActivities(publicAddress, transaction.method, receiept?.transactionHash, false)
+            try {
+                setShowConfirm(false)
+                setStatus('pending')
+                const response = await wallet.sendTransaction(transaction?.transaction);
+                const receiept = await response.wait();
+                if (receiept?.status) {
+                    setAccountActivities(publicAddress, transaction.method, receiept?.transactionHash, true)
+                    setStatus('confirmed')
+                    getAccountTokens(wallet, publicAddress)
+                } else {
+                    setAccountActivities(publicAddress, transaction.method, receiept?.transactionHash, false)
+                    setStatus('failed')
+                }
+            } catch (error) {
                 setStatus('failed')
             }
             setTransaction(undefined)
@@ -485,10 +704,14 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
     const provider = {
         Wallet: wallet,
         publicAddress,
+        userBalance,
+        userBalanceLoading,
         contractInstances,
         showLoading,
         showConfirm,
         transaction,
+        loadingTransaction,
+        transferTokens,
         userSignIn,
         getPrivateKey,
         getDcryptedString,
@@ -502,7 +725,9 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
         closeConfirmModal,
         confirmTransaction,
         status,
-        addBookmark,
+        addTabBookmark,
+        addCustomBookmark,
+        updateCustomBookmark
 
     }
 
