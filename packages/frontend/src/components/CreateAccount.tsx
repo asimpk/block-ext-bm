@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { ethers } from "ethers";
 import { useWeb3 } from "../contexts/Web3Context/Web3Context";
-import { Alert, Button, Card, Container, FormControl, IconButton, Input, InputAdornment, InputLabel, Paper, Typography } from "@mui/material";
+import { Alert, Button, Card, Container, FormControl, FormHelperText, IconButton, Input, InputAdornment, InputLabel, Paper, Typography } from "@mui/material";
 import MainLayout from "./Layouts/MainLayout";
 import HeaderLayout from "./Layouts/HeaderLayout";
 import ContentLayout from "./Layouts/ContentLayout";
@@ -11,8 +11,9 @@ import { Visibility, VisibilityOff } from "@material-ui/icons";
 
 function CreateAccount() {
   const [newSeedPhrase, setNewSeedPhrase] = useState("");
-  const [password, setPassword] = useState("");
+  const [password, setPassword] = useState<string>();
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState<undefined | string>();
   const navigate = useNavigate();
   const { connectWallet } = useWeb3();
 
@@ -30,14 +31,23 @@ function CreateAccount() {
 
   //"0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
 
-  function setWalletAndMnemonic() {
+  // function setWalletAndMnemonic() {
+  //   if (newSeedPhrase && password) {
+  //     connectWallet(password, newSeedPhrase)
+  //   }
+  // }
+
+  const setWalletAndMnemonic = async () => {
     if (newSeedPhrase && password) {
-      connectWallet(password, newSeedPhrase)
+      const respMsg = await connectWallet(password, newSeedPhrase);
+      if (respMsg && !respMsg.status) {
+        setError(respMsg.message)
+      }
     }
   }
 
   const validPassword = (password: string) => {
-    if (password.length !== 0 && password.replace(/\s/g, '').length) {
+    if (password.length !== 0 && !(/\s/.test(password))) {
       return true
     }
     return false
@@ -73,6 +83,7 @@ function CreateAccount() {
             width: '90%'
 
           }}>
+            {error && <FormHelperText variant="standard" sx={{ color: "red", textAlign: 'center', marginTop: "10px", padding: "0 15px", width: '80%' }}>{error}</FormHelperText>}
             <Button
               variant="outlined"
               sx={{ marginTop: "10px", padding: "0 15px", width: '80%' }}
@@ -83,7 +94,7 @@ function CreateAccount() {
             <Card variant="outlined" sx={{ width: "80%", height: "135px", marginTop: "15px", padding: "0 10px" }}>
               {newSeedPhrase && <pre style={{ whiteSpace: "pre-wrap" }}>{newSeedPhrase}</pre>}
             </Card>
-            <FormControl margin="normal" required fullWidth sx={{ width: '80%' }}>
+            <FormControl margin="normal" variant="standard" required fullWidth sx={{ width: '80%' }}>
               <InputLabel htmlFor="password">Password</InputLabel>
               <Input
                 name="password"
@@ -107,7 +118,7 @@ function CreateAccount() {
             </FormControl>
             <Button
               disabled={
-                newSeedPhrase.split(" ").length !== 12 || newSeedPhrase.slice(-1) === " " || !validPassword(password)
+                newSeedPhrase.split(" ").length !== 12 || newSeedPhrase.slice(-1) === " " || !password || !validPassword(password)
               }
               variant="outlined"
               sx={{ marginBottom: "10px", marginTop: "22px", padding: "0 15px", width: '80%' }}

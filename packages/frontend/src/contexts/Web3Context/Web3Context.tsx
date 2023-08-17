@@ -13,9 +13,9 @@ type Web3ContextType = {
     loadingTransaction: boolean,
     transferTokens: (toAddress: string, amount: string) => Promise<void>,
     status: string,
-    connectWallet: (password: string, seedPhrase: string, privateAccount?: string) => void;
+    connectWallet: (password: string, seedPhrase: string, privateAccount?: string) => Promise<{ status: boolean, message: string }>;
     disconnectWallet: () => void;
-    userSignIn: (passphrase: string) => void;
+    userSignIn: (passphrase: string) => Promise<{ status: boolean, message: string }>;
     getPrivateKey: (passphrase: string) => Promise<boolean>;
     getDcryptedString: (wallet: Wallet, encryptedString: string) => Promise<string>;
     createFolder: (contractName: ContractName,  folderName: string) => Promise<void>,

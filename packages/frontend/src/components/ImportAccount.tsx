@@ -8,6 +8,7 @@ import MainLayout from "./Layouts/MainLayout";
 import HeaderLayout from "./Layouts/HeaderLayout";
 import ContentLayout from "./Layouts/ContentLayout";
 import { Visibility, VisibilityOff } from "@material-ui/icons";
+import FormHelperText from "@material-ui/core/FormHelperText";
 
 const ImportAccount = () => {
   const [newSeedPhrase, setNewSeedPhrase] = useState("");
@@ -15,6 +16,7 @@ const ImportAccount = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showPrivateKey, setShowPrivateKey] = useState(false);
   const [privateKey, setPrivateKey] = useState("")
+  const [error, setError] = useState<undefined | string>();
   const navigate = useNavigate();
   const { connectWallet } = useWeb3()
 
@@ -31,12 +33,30 @@ const ImportAccount = () => {
     event.preventDefault();
   };
 
-  function setWalletAndMnemonic(e: React.FormEvent<HTMLFormElement>) {
+  const setWalletAndMnemonic = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (privateKey && password) {
-      connectWallet(password, newSeedPhrase, privateKey)
+      const respMsg = await connectWallet(password, newSeedPhrase, privateKey);
+      if (respMsg && !respMsg.status) {
+        setError(respMsg.message)
+      }
     }
   }
+
+
+  const validPassword = (password: string) => {
+    if (password.length !== 0 && !(/\s/.test(password))) {
+      return true
+    }
+    return false
+  }
+
+  const isPrivateKeyValid = (privateKey: string) => {
+    const validPrivateKeyRegex = /^(0x)?[0-9a-fA-F]{64}$/;
+
+    return validPrivateKeyRegex.test(privateKey);
+  }
+
 
 
   return (
@@ -72,7 +92,8 @@ const ImportAccount = () => {
             </Typography>
 
             <form onSubmit={(e) => setWalletAndMnemonic(e)} style={{ width: '80%' }}>
-              <FormControl margin="normal" required fullWidth sx={{ width: '100%' }}>
+              {error && <FormHelperText variant="standard" sx={{ color: "red", textAlign: 'center' }}>{error}</FormHelperText>}
+              <FormControl margin="normal" variant="standard" required fullWidth sx={{ width: '100%' }}>
                 <InputLabel htmlFor="private-key-password">Private Key</InputLabel>
                 <Input
                   name="private-key-password"
@@ -92,9 +113,10 @@ const ImportAccount = () => {
                   autoComplete="current-password"
                   value={privateKey}
                   onChange={e => setPrivateKey(e.target.value)}
+                  error={(privateKey && !isPrivateKeyValid(privateKey)) ? true : false}
                 />
               </FormControl>
-              <FormControl margin="normal" required fullWidth sx={{ width: '100%' }}>
+              <FormControl margin="normal" variant="standard" required fullWidth sx={{ width: '100%' }}>
                 <InputLabel htmlFor="password">Set Password</InputLabel>
                 <Input
                   name="password"
@@ -114,9 +136,11 @@ const ImportAccount = () => {
                   autoComplete="current-password"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
+                  error={(password && !validPassword(password)) ? true : false}
                 />
               </FormControl>
               <Button
+                disabled={!password || !validPassword(password)}
                 variant="outlined"
                 type="submit"
                 sx={{ marginBottom: "10px", marginTop: "22px", padding: "0 15px", width: '100%' }}

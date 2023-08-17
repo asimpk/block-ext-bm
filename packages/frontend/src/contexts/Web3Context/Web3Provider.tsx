@@ -19,8 +19,12 @@ interface ContractData {
 }
 
 // const CONTRACT_ADDRESS_MUMBAI = "0x2e9793f057b8efc18e14630aebe8d86b2f3d26a4"
-const CONTRACT_ADDRESS_TabBookMarks = "0x2b90522b272d61f56e6272ed3d371684c9faced5"
-const CONTRACT_ADDRESS_CUSTOMBookMarks = "0x74bdd566965aeec114b6f3666cf9cbea0f381e9b"
+// mumbai deployed
+// const CONTRACT_ADDRESS_TabBookMarks = "0x2b90522b272d61f56e6272ed3d371684c9faced5"
+// const CONTRACT_ADDRESS_CUSTOMBookMarks = "0x74bdd566965aeec114b6f3666cf9cbea0f381e9b"
+
+const CONTRACT_ADDRESS_TabBookMarks = "0x5FbDB2315678afecb367f032d93F642f64180aa3"
+const CONTRACT_ADDRESS_CUSTOMBookMarks = "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512"
 
 export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
     const [wallet, setWallet] = useState<Wallet>()
@@ -75,7 +79,7 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
                     let privateKey
                     const unWrappedKey = await getUnwrappedKey(retrievedwrappedKey, retrievedSessionK)
                     const decryptedMnemonic = await decryptMnemonic(unWrappedKey, resultLocal.encryptMnemonicStore)
-                    const chain = CHAINS_CONFIG["0x13881"];
+                    const chain = CHAINS_CONFIG["0x7a69"];
                     const provider1 = new ethers.providers.JsonRpcProvider(chain.rpcUrl);
                     if (decryptedMnemonic.split(" ").length === 12) {
                         privateKey = ethers.Wallet.fromMnemonic(decryptedMnemonic).privateKey;
@@ -116,7 +120,7 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
                         acc[name] = contract[name];
                         return acc;
                     }, {} as { [k in ContractName]: ethers.Contract });
-                    
+
                     setContractInstances(contractObject);
                     navigate("/wallet");
 
@@ -142,104 +146,114 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
 
 
 
-    const connectWallet = async (password: string, seedPhrase: string, privateAccount?: string) => {
+    const connectWallet = async (password: string, seedPhrase: string, privateAccount?: string): Promise<{ status: boolean, message: string }> => {
         if (privateAccount) {
-            const userSalt = await generateSalt(privateAccount)
-            const passwordHash = await generatePasswordHash(password, userSalt)
-            const wrappingKey = await deriveWrappingKey(password, userSalt)
-            const userKey = await generateUserKeyFromMnemonic(privateAccount, userSalt)
-            const wrappedKey = await getWrappedKey(userKey, wrappingKey);
-            const unWrappedKey = await getUnwrappedKey(wrappedKey, wrappingKey)
+            try {
+                const userSalt = await generateSalt(privateAccount)
+                const passwordHash = await generatePasswordHash(password, userSalt)
+                const wrappingKey = await deriveWrappingKey(password, userSalt)
+                const userKey = await generateUserKeyFromMnemonic(privateAccount, userSalt)
+                const wrappedKey = await getWrappedKey(userKey, wrappingKey);
+                const unWrappedKey = await getUnwrappedKey(wrappedKey, wrappingKey)
 
-            const encryptMnemonicStore = await encryptMnemonic(unWrappedKey, privateAccount);
-            const chain = CHAINS_CONFIG["0x13881"];
-            const provider = new ethers.providers.JsonRpcProvider(chain.rpcUrl);
-            // const privateKey = ethers.Wallet.fromMnemonic(seedPhrase).privateKey;
-            const privateKey = privateAccount;
-            const WalletTemp = new ethers.Wallet(privateKey, provider);
+                const encryptMnemonicStore = await encryptMnemonic(unWrappedKey, privateAccount);
+                const chain = CHAINS_CONFIG["0x7a69"];
+                const provider = new ethers.providers.JsonRpcProvider(chain.rpcUrl);
+                // const privateKey = ethers.Wallet.fromMnemonic(seedPhrase).privateKey;
+                const privateKey = privateAccount;
+                const WalletTemp = new ethers.Wallet(privateKey, provider);
 
-            const contractsData: ContractData[] = [
-                // Add contract ABIs and addresses here
-                {
-                    abi: contractsAbi.tabBookmarksAbi,
-                    address: CONTRACT_ADDRESS_TabBookMarks,
-                    name: "tabBookmarks"
-                },
-                {
-                    abi: contractsAbi.customBookmarksAbi,
-                    address: CONTRACT_ADDRESS_CUSTOMBookMarks,
-                    name: "customBookmarks"
-                }
-            ];
+                const contractsData: ContractData[] = [
+                    // Add contract ABIs and addresses here
+                    {
+                        abi: contractsAbi.tabBookmarksAbi,
+                        address: CONTRACT_ADDRESS_TabBookMarks,
+                        name: "tabBookmarks"
+                    },
+                    {
+                        abi: contractsAbi.customBookmarksAbi,
+                        address: CONTRACT_ADDRESS_CUSTOMBookMarks,
+                        name: "customBookmarks"
+                    }
+                ];
 
 
-            const publicKey = WalletTemp?.address;
-            const buffer = await window.crypto.subtle.exportKey('raw', wrappingKey);
-            const sessionkey = arrayBufferToBase64String(buffer);
-            const wrappedKeyString = arrayBufferToBase64String(wrappedKey);
-            const userSaltString = uint8ArrayToBase64(userSalt)
-            await chrome.storage.local.set({ encryptMnemonicStore, passwordHash, wrappedKeyString, userSalt: userSaltString })
-            chrome.storage.session.set({ sessionkey }).then(async () => {
-                const contracts = await getContractInstances(WalletTemp, contractsData);
+                const publicKey = WalletTemp?.address;
+                const buffer = await window.crypto.subtle.exportKey('raw', wrappingKey);
+                const sessionkey = arrayBufferToBase64String(buffer);
+                const wrappedKeyString = arrayBufferToBase64String(wrappedKey);
+                const userSaltString = uint8ArrayToBase64(userSalt)
+                await chrome.storage.local.set({ encryptMnemonicStore, passwordHash, wrappedKeyString, userSalt: userSaltString })
+                chrome.storage.session.set({ sessionkey }).then(async () => {
+                    const contracts = await getContractInstances(WalletTemp, contractsData);
 
-                const contractObject = contracts.reduce((acc, contract) => {
-                    const name = Object.keys(contract)[0] as ContractName;
-                    acc[name] = contract[name];
-                    return acc;
-                }, {} as { [k in ContractName]: ethers.Contract });
-                setUnWrappedKey(unWrappedKey)
-                setPublicAddress(publicKey)
-                setWallet(WalletTemp)
-                getAccountTokens(WalletTemp, publicKey)
-                setContractInstances(contractObject)
-                navigate("/wallet")
-            })
+                    const contractObject = contracts.reduce((acc, contract) => {
+                        const name = Object.keys(contract)[0] as ContractName;
+                        acc[name] = contract[name];
+                        return acc;
+                    }, {} as { [k in ContractName]: ethers.Contract });
+                    setUnWrappedKey(unWrappedKey)
+                    setPublicAddress(publicKey)
+                    setWallet(WalletTemp)
+                    getAccountTokens(WalletTemp, publicKey)
+                    setContractInstances(contractObject)
+                    navigate("/wallet")
+                })
+                return { status: true, message: "Successfully connected with Wallet!" }
+            } catch (error) {
+                return { status: false, message: "Error in Importing account!" }
+            }
         } else {
-            const userSalt = await generateSalt(seedPhrase)
-            const passwordHash = await generatePasswordHash(password, userSalt)
-            const wrappingKey = await deriveWrappingKey(password, userSalt)
-            const userKey = await generateUserKeyFromMnemonic(seedPhrase, userSalt)
-            const wrappedKey = await getWrappedKey(userKey, wrappingKey);
-            const unWrappedKey = await getUnwrappedKey(wrappedKey, wrappingKey)
+            try {
+                const userSalt = await generateSalt(seedPhrase)
+                const passwordHash = await generatePasswordHash(password, userSalt)
+                const wrappingKey = await deriveWrappingKey(password, userSalt)
+                const userKey = await generateUserKeyFromMnemonic(seedPhrase, userSalt)
+                const wrappedKey = await getWrappedKey(userKey, wrappingKey);
+                const unWrappedKey = await getUnwrappedKey(wrappedKey, wrappingKey)
 
-            const encryptMnemonicStore = await encryptMnemonic(unWrappedKey, seedPhrase);
-            const chain = CHAINS_CONFIG["0x13881"];
-            const provider = new ethers.providers.JsonRpcProvider(chain.rpcUrl);
-            const privateKey = ethers.Wallet.fromMnemonic(seedPhrase).privateKey;
-            const WalletTemp = new ethers.Wallet(privateKey, provider);
-            const contractsData: ContractData[] = [
-                // Add contract ABIs and addresses here
-                {
-                    abi: contractsAbi.tabBookmarksAbi,
-                    address: CONTRACT_ADDRESS_TabBookMarks,
-                    name: "tabBookmarks"
-                },
-                {
-                    abi: contractsAbi.customBookmarksAbi,
-                    address: CONTRACT_ADDRESS_CUSTOMBookMarks,
-                    name: "customBookmarks"
-                }
-            ];
-            const publicKey = WalletTemp?.address;
-            const buffer = await window.crypto.subtle.exportKey('raw', wrappingKey);
-            const sessionkey = arrayBufferToBase64String(buffer);
-            const wrappedKeyString = arrayBufferToBase64String(wrappedKey);
-            const userSaltString = uint8ArrayToBase64(userSalt)
-            await chrome.storage.local.set({ encryptMnemonicStore, passwordHash, wrappedKeyString, userSalt: userSaltString })
-            chrome.storage.session.set({ sessionkey }).then(async () => {
-                const contracts = await getContractInstances(WalletTemp, contractsData);
-                const contractObject = contracts.reduce((acc, contract) => {
-                    const name = Object.keys(contract)[0] as ContractName;
-                    acc[name] = contract[name];
-                    return acc;
-                }, {} as { [k in ContractName]: ethers.Contract });
-                setUnWrappedKey(unWrappedKey)
-                setPublicAddress(publicKey)
-                setWallet(WalletTemp)
-                getAccountTokens(WalletTemp, publicKey)
-                setContractInstances(contractObject)
-                navigate("/wallet")
-            })
+                const encryptMnemonicStore = await encryptMnemonic(unWrappedKey, seedPhrase);
+                const chain = CHAINS_CONFIG["0x7a69"];
+                const provider = new ethers.providers.JsonRpcProvider(chain.rpcUrl);
+                const privateKey = ethers.Wallet.fromMnemonic(seedPhrase).privateKey;
+                const WalletTemp = new ethers.Wallet(privateKey, provider);
+                const contractsData: ContractData[] = [
+                    // Add contract ABIs and addresses here
+                    {
+                        abi: contractsAbi.tabBookmarksAbi,
+                        address: CONTRACT_ADDRESS_TabBookMarks,
+                        name: "tabBookmarks"
+                    },
+                    {
+                        abi: contractsAbi.customBookmarksAbi,
+                        address: CONTRACT_ADDRESS_CUSTOMBookMarks,
+                        name: "customBookmarks"
+                    }
+                ];
+                const publicKey = WalletTemp?.address;
+                const buffer = await window.crypto.subtle.exportKey('raw', wrappingKey);
+                const sessionkey = arrayBufferToBase64String(buffer);
+                const wrappedKeyString = arrayBufferToBase64String(wrappedKey);
+                const userSaltString = uint8ArrayToBase64(userSalt)
+                await chrome.storage.local.set({ encryptMnemonicStore, passwordHash, wrappedKeyString, userSalt: userSaltString })
+                chrome.storage.session.set({ sessionkey }).then(async () => {
+                    const contracts = await getContractInstances(WalletTemp, contractsData);
+                    const contractObject = contracts.reduce((acc, contract) => {
+                        const name = Object.keys(contract)[0] as ContractName;
+                        acc[name] = contract[name];
+                        return acc;
+                    }, {} as { [k in ContractName]: ethers.Contract });
+                    setUnWrappedKey(unWrappedKey)
+                    setPublicAddress(publicKey)
+                    setWallet(WalletTemp)
+                    getAccountTokens(WalletTemp, publicKey)
+                    setContractInstances(contractObject)
+                    navigate("/wallet")
+                })
+                return { status: true, message: "Successfully connected with Wallet!" }
+            } catch (error) {
+                return { status: false, message: "Error in connecting with wallet!" }
+            }
         }
 
     }
@@ -258,56 +272,61 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
         });
     }
 
-    const userSignIn = async (passphrase: string) => {
+    const userSignIn = async (passphrase: string): Promise<{ status: boolean, message: string }> => {
         // Retrieve the encryptedStore from chrome.storage.local
         const { encryptMnemonicStore, userSalt, wrappedKeyString } = await chrome.storage.local.get(['encryptMnemonicStore', "userSalt", "wrappedKeyString"])
         if (encryptMnemonicStore && userSalt && wrappedKeyString) {
-            let privateKey;
-            const userSaltArray = base64ToUint8Array(userSalt)
-            const wrappingKey = await deriveWrappingKey(passphrase, userSaltArray)
-            const retrievedwrappedKey = base64StringToArrayBuffer(wrappedKeyString);
-            const unWrappedKey = await getUnwrappedKey(retrievedwrappedKey, wrappingKey)
-            const decryptedMnemonic = await decryptMnemonic(unWrappedKey, encryptMnemonicStore)
-            const chain = CHAINS_CONFIG["0x13881"];
-            const provider = new ethers.providers.JsonRpcProvider(chain.rpcUrl);
-            if (decryptedMnemonic.split(" ").length === 12) {
-                privateKey = ethers.Wallet.fromMnemonic(decryptedMnemonic).privateKey;
-            } else {
-                privateKey = decryptedMnemonic;
-            }
-            const WalletTemp = new ethers.Wallet(privateKey, provider);
-            const contractsData: ContractData[] = [
-                // Add contract ABIs and addresses here
-                {
-                    abi: contractsAbi.tabBookmarksAbi,
-                    address: CONTRACT_ADDRESS_TabBookMarks,
-                    name: "tabBookmarks"
-                },
-                {
-                    abi: contractsAbi.customBookmarksAbi,
-                    address: CONTRACT_ADDRESS_CUSTOMBookMarks,
-                    name: "customBookmarks"
+            try {
+                let privateKey;
+                const userSaltArray = base64ToUint8Array(userSalt)
+                const wrappingKey = await deriveWrappingKey(passphrase, userSaltArray)
+                const retrievedwrappedKey = base64StringToArrayBuffer(wrappedKeyString);
+                const unWrappedKey = await getUnwrappedKey(retrievedwrappedKey, wrappingKey)
+                const decryptedMnemonic = await decryptMnemonic(unWrappedKey, encryptMnemonicStore)
+                const chain = CHAINS_CONFIG["0x7a69"];
+                const provider = new ethers.providers.JsonRpcProvider(chain.rpcUrl);
+                if (decryptedMnemonic.split(" ").length === 12) {
+                    privateKey = ethers.Wallet.fromMnemonic(decryptedMnemonic).privateKey;
+                } else {
+                    privateKey = decryptedMnemonic;
                 }
-            ];
-            const publicKey = WalletTemp?.address;
-            const buffers = await window.crypto.subtle.exportKey('raw', wrappingKey);
-            const sessionkey = arrayBufferToBase64String(buffers);
-            chrome.storage.session.set({ sessionkey }).then(async () => {
-                const contracts = await getContractInstances(WalletTemp, contractsData);
-                const contractObject = contracts.reduce((acc, contract) => {
-                    const name = Object.keys(contract)[0] as ContractName;
-                    acc[name] = contract[name];
-                    return acc;
-                }, {} as { [k in ContractName]: ethers.Contract });
-                setUnWrappedKey(unWrappedKey)
-                setPublicAddress(publicKey)
-                setWallet(WalletTemp)
-                getAccountTokens(WalletTemp, publicKey)
-                setContractInstances(contractObject)
-                navigate("/wallet")
-            })
+                const WalletTemp = new ethers.Wallet(privateKey, provider);
+                const contractsData: ContractData[] = [
+                    // Add contract ABIs and addresses here
+                    {
+                        abi: contractsAbi.tabBookmarksAbi,
+                        address: CONTRACT_ADDRESS_TabBookMarks,
+                        name: "tabBookmarks"
+                    },
+                    {
+                        abi: contractsAbi.customBookmarksAbi,
+                        address: CONTRACT_ADDRESS_CUSTOMBookMarks,
+                        name: "customBookmarks"
+                    }
+                ];
+                const publicKey = WalletTemp?.address;
+                const buffers = await window.crypto.subtle.exportKey('raw', wrappingKey);
+                const sessionkey = arrayBufferToBase64String(buffers);
+                chrome.storage.session.set({ sessionkey }).then(async () => {
+                    const contracts = await getContractInstances(WalletTemp, contractsData);
+                    const contractObject = contracts.reduce((acc, contract) => {
+                        const name = Object.keys(contract)[0] as ContractName;
+                        acc[name] = contract[name];
+                        return acc;
+                    }, {} as { [k in ContractName]: ethers.Contract });
+                    setUnWrappedKey(unWrappedKey)
+                    setPublicAddress(publicKey)
+                    setWallet(WalletTemp)
+                    getAccountTokens(WalletTemp, publicKey)
+                    setContractInstances(contractObject)
+                    navigate("/wallet")
+                })
+                return { status: true, message: "Sign In Successfully" }
+            } catch (error) {
+                return { status: false, message: "Error in Sign In, try again!" }
+            }
         } else {
-            navigate("/create-account")
+            return { status: false, message: "No account found, Create new account!" }
         }
 
     }
@@ -464,7 +483,7 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
 
 
 
-    const createFolder = async (contractName: ContractName,  folderName: string) => {
+    const createFolder = async (contractName: ContractName, folderName: string) => {
         if (contractInstances && wallet) {
             const contract = contractInstances[contractName];
             const uuid = nanoid()
@@ -557,7 +576,7 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
         }
     }
 
-    const addCustomBookmark = async (folderId: string, url: string, title:string) => {
+    const addCustomBookmark = async (folderId: string, url: string, title: string) => {
         if (contractInstances && wallet) {
             const customBookmarks = contractInstances["customBookmarks"];
             const uuid = nanoid();
@@ -582,7 +601,7 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
         }
     }
 
-    const updateCustomBookmark = async (folderId: string, bookmarkId: string, url: string, title:string) => {
+    const updateCustomBookmark = async (folderId: string, bookmarkId: string, url: string, title: string) => {
         if (contractInstances && wallet) {
             const customBookmarks = contractInstances["customBookmarks"];
             const encryptedUrl = await getEncryptedString(wallet, url);

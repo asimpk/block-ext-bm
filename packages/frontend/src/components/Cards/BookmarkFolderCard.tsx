@@ -35,8 +35,6 @@ const BookmarkFolderCard: React.FC<BookMarksType> = ({ bookmarkFolder, selectFol
         handleClose(event)
     }
 
-
-
     return (
         <Card sx={{
             width: 100, minWidth: 96, height: 90, borderRadius: 4, maxWidth: 120, margin: `10px 7px`,

@@ -36,7 +36,7 @@ const WalletNew = () => {
           </Box>
           :
           <ContentLayout>
-            {publicAddress ? <WalletView selectedChain="0x13881" /> : <SignIn />}
+            {publicAddress ? <WalletView selectedChain="0x7a69" /> : <SignIn />}
           </ContentLayout>
       }
     </MainLayout >

@@ -5,10 +5,12 @@ import { useState } from "react";
 import { useWeb3 } from "../contexts/Web3Context/Web3Context";
 import { Button, Container, FormControl, IconButton, Input, InputAdornment, InputLabel, Link, Paper, Typography } from "@mui/material";
 import { Visibility, VisibilityOff } from "@material-ui/icons";
+import { FormHelperText } from "@material-ui/core";
 
 const SignIn = () => {
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
+    const [error, setError] = useState<undefined | string>();
     const navigate = useNavigate();
     const { userSignIn } = useWeb3()
 
@@ -18,9 +20,19 @@ const SignIn = () => {
         event.preventDefault();
     };
 
-    const submitHandle = (e: React.FormEvent<HTMLFormElement>) => {
+    const submitHandle = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        userSignIn(password)
+        const respMsg = await userSignIn(password);
+        if (respMsg && !(respMsg.status)) {
+            setError(respMsg.message)
+        }
+    }
+
+    const validPassword = (password: string) => {
+        if (password.length !== 0 && !(/\s/.test(password))) {
+            return true
+        }
+        return false
     }
 
 
@@ -47,7 +59,8 @@ const SignIn = () => {
                     UnLock
                 </Typography>
                 <form onSubmit={(e) => submitHandle(e)} style={{ width: '80%' }}>
-                    <FormControl margin="normal" required fullWidth>
+                    {error && <FormHelperText variant="standard" sx={{ color: "red", textAlign: 'center' }}>{error}</FormHelperText>}
+                    <FormControl margin="normal" required fullWidth variant="standard" >
                         <InputLabel htmlFor="password">Password</InputLabel>
                         <Input
                             name="password"
@@ -64,13 +77,17 @@ const SignIn = () => {
                                     </IconButton>
                                 </InputAdornment>
                             }
+
                             autoComplete="current-password"
                             value={password}
                             onChange={e => setPassword(e.target.value)}
+                            required
+                            error={error ? true : false}
                         />
                     </FormControl>
                     <Container sx={{ padding: 0, textAlign: 'end', cursor: 'pointer' }}> <Link onClick={() => navigate('/recover-account')}>Recover</Link></Container>
                     <Button
+                        disabled={!password || !validPassword(password)}
                         type="submit"
                         variant="outlined"
                         sx={{ marginBottom: "10px", marginTop: "22px", padding: "0 15px", width: '100%' }}

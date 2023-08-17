@@ -148,6 +148,17 @@ function WalletView({
     }
   }
 
+  const isPublicKeyValid = (publicKey: string) => {
+    const validPublicKeyRegex = /^(0x)?[0-9a-fA-F]{40}$/;
+  
+    return validPublicKeyRegex.test(publicKey);
+  }
+
+  const containsOnlyPositiveNumbers = (str: string) => {
+    const parsedValue = parseFloat(str);
+    return !isNaN(parsedValue) && parsedValue > 0 && String(parsedValue) === str;
+  }
+
   return (
     <>
       <Container sx={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '10px 0px' }}>
@@ -166,7 +177,7 @@ function WalletView({
       <Typography component="h1" variant="h4" sx={{ textAlign: 'center', padding: "10px 0px", width: '100%', marginBottom: "10px", marginTop: '15px' }}>
         {
           userBalanceLoading ? <CircularProgress size="2rem" /> : (userBalance).toFixed(2)
-        } {CHAINS_CONFIG["0x13881"].ticker}
+        } {CHAINS_CONFIG["0x7a69"].ticker}
 
         <Tooltip sx={{ padding: 0, margin: 0 }} title={
           <Box sx={{ wordBreak: 'break-word', padding: 0, margin: 0, height: "100%" }}>
@@ -203,16 +214,16 @@ function WalletView({
           <Tab label="Account Details" {...a11yProps(2)} />
         </Tabs>
         <TabPanel value={value} index={0}>
-
           <TextField
             id="send-to-address"
             value={sendToAddress}
             onChange={(e) => setSendToAddress(e.target.value)}
             placeholder="0x..."
-            label="Send to Address"
+            label="Receiver Address"
             variant="outlined"
             size="small"
             sx={{ marginTop: '30px', width: '85%' }}
+            error={(sendToAddress && !isPublicKeyValid(sendToAddress)) ? true : false}
           />
 
           <TextField
@@ -224,9 +235,11 @@ function WalletView({
             variant="outlined"
             size="small"
             sx={{ marginTop: '20px', width: '85%' }}
+            error={(amountToSend && !containsOnlyPositiveNumbers(amountToSend)) ? true : false}
           />
 
           <Button
+            disabled={!isPublicKeyValid(sendToAddress) || !containsOnlyPositiveNumbers(amountToSend) }
             onClick={() => sendTransaction(sendToAddress, amountToSend)}
             variant="outlined"
             sx={{ marginTop: "30px", padding: "0", width: '85%' }}

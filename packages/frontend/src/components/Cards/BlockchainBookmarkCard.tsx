@@ -41,10 +41,11 @@ const BlockchainBookmarkCard: React.FC<BookMarksType> = ({ bookmark, deleteBookm
 
     return (
         <Card sx={{
-            width: 100, minWidth: 96, height: 100, borderRadius: 4, maxWidth: 120, backgroundColor: 'unset', margin: `10px 7px`,
+            width: "100%", height: 40, borderRadius: 4, backgroundColor: 'unset', margin: `4px 7px`,
             display: 'flex',
-            padding: `4px 3px`,
-            flexDirection: 'column',
+            padding: `4px 8px`,
+            // flexDirection: 'column',
+            alignItems: 'center',
             cursor: 'pointer',
             backgroundImage: anchorEl ? `linear-gradient(rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.05))` : 'none',
             elevation: 0,
@@ -55,6 +56,24 @@ const BlockchainBookmarkCard: React.FC<BookMarksType> = ({ bookmark, deleteBookm
             // onClick={() => navigate(`/blockchain-bookmarks/${bookmark?.id}/${bookmark?.id}`)}
             onClick={() => window.open(bookmark?.url, '_blank')}
         >
+            <Tooltip title={bookmark?.url}>
+                {/* <Link href={bookmark?.url} target="_blank" underline="none" color='white' sx={{ height: 'fit-content', width: '100%', paddingTop: `16px` }} key={bookmark?.id}> */}
+                {/* <img
+                        width={'28px'}
+                        src={`https://mui.com/static/logo.png`}
+                        alt={'url_icon'}
+                        loading="lazy"
+                    /> */}
+                <Typography
+                    noWrap={true}
+                    fontSize={'0.8rem'}
+                    color='inherit'
+                    fontWeight='700'
+                >
+                    {bookmark?.url}
+                </Typography>
+                {/* </Link> */}
+            </Tooltip>
             <Box style={{ display: 'flex', justifyContent: 'flex-end', width: "fit-content", marginLeft: 'auto' }} className='actions' onClick={handleClick}>
                 <IconButton aria-label="share" size="small" style={{ width: 'fit-content', fontSize: '0.8rem', padding: '5px 2px', marginRight: '2px' }}>
                     <MoreVertIcon fontSize='small' />
@@ -81,25 +100,7 @@ const BlockchainBookmarkCard: React.FC<BookMarksType> = ({ bookmark, deleteBookm
                     </MenuItem>
                 </Menu>
             </Box>
-            <Tooltip title={bookmark?.url}>
-                {/* <Link href={bookmark?.url} target="_blank" underline="none" color='white' sx={{ height: 'fit-content', width: '100%', paddingTop: `16px` }} key={bookmark?.id}> */}
-                {/* <img
-                        width={'28px'}
-                        src={`https://mui.com/static/logo.png`}
-                        alt={'url_icon'}
-                        loading="lazy"
-                    /> */}
-                <Typography
-                    noWrap={true}
-                    fontSize={'0.8rem'}
-                    color='inherit'
-                    fontWeight='700'
-                    marginTop='15%'
-                >
-                    {bookmark?.url}
-                </Typography>
-                {/* </Link> */}
-            </Tooltip>
+
         </Card>
     )
 }

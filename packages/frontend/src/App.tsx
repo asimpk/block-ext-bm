@@ -7,7 +7,7 @@ import CssBaseline from '@mui/material/CssBaseline';
 import DashboardIcon from '@material-ui/icons/Dashboard';
 import './App.css';
 import { useWeb3 } from './contexts/Web3Context/Web3Context';
-import { Alert, Box, Divider, List, ListItemButton, ListItemIcon, Paper, Snackbar, Tooltip } from '@mui/material';
+import { Alert, AlertTitle, Box, CircularProgress, Divider, List, ListItemButton, ListItemIcon, Paper, Snackbar, Tooltip } from '@mui/material';
 import TabBookmarks from './components/TabBookmarks';
 import CustomBookmarks from "./components/CustomBookmarks";
 import BlockchainBookmarkDetail from './components/BlockchainBookmarkDetail';
@@ -41,22 +41,28 @@ function App() {
         {showConfirm && <ConfirmModal />}
         {
           status === 'pending' &&
-          <Snackbar open={true} sx={{ marginLeft: '100px', width: '60%' }}>
-            <Alert severity="info" sx={{ width: "100%" }}>
-              Transaction is — <strong>{status}!</strong>
+          <Snackbar open={true} sx={{ width: '100%', left: 0, right: 0 }}>
+            <Alert severity="info" icon={false} sx={{ width: "100%" }}>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <CircularProgress size="1rem" sx={{ mr: 1 }} />  Transaction is — <strong>{status}!</strong>
+              </Box>
             </Alert>
           </Snackbar>
         }
 
         {status === 'failed' &&
-          <Snackbar open={true} autoHideDuration={2000} sx={{ marginLeft: '100px', width: '60%' }}>
-            <Alert severity="error" sx={{ width: "100%" }}>
-              Transaction is — <strong>{status}!</strong>
+          <Snackbar open={true} autoHideDuration={1000} sx={{ width: '100%', left: 0, right: 0 }}>
+            <Alert severity="error" icon={false} sx={{ width: "100%" }}>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <CircularProgress size="1rem" sx={{ mr: 1 }} />  Transaction is — <strong>{status}!</strong>
+              </Box>
             </Alert></Snackbar>}
         {status === 'confirmed' &&
-          <Snackbar open={true} autoHideDuration={2000} sx={{ marginLeft: '100px', width: '60%' }}>
-            <Alert severity="success" sx={{ width: "100%" }}>
-              Transaction is — <strong>{'Successful'}!</strong>
+          <Snackbar open={true} autoHideDuration={1000} sx={{ width: '100%', left: 0, right: 0 }}>
+            <Alert severity="success" icon={false} sx={{ width: "100%" }}>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <CircularProgress size="1rem" sx={{ mr: 1 }} />  Transaction is — <strong>{'Successful'}!</strong>
+              </Box>
             </Alert>
           </Snackbar>}
         <Paper
@@ -81,7 +87,7 @@ function App() {
               </ListItemButton>
             </Tooltip>
             <Tooltip title="Custom Bookmarks">
-              <ListItemButton key={3} onClick={() => { navigate("/custom-bookmarks"); setSelectedMenu(3) }} sx={ selectedMenu === 3 ? { backgroundColor: "rgba(255, 255, 255, 0.08)", marginTop: '4px' } : {marginTop: '4px' } }>
+              <ListItemButton key={3} onClick={() => { navigate("/custom-bookmarks"); setSelectedMenu(3) }} sx={selectedMenu === 3 ? { backgroundColor: "rgba(255, 255, 255, 0.08)", marginTop: '4px' } : { marginTop: '4px' }}>
                 <ListItemIcon sx={{ minWidth: 40 }}>
                   <AddLinkOutlinedIcon />
                 </ListItemIcon>
