@@ -98,7 +98,7 @@ const AddBookmarkDialog = (props: ConfirmationDialogRawProps) => {
                 <Button variant='outlined' autoFocus onClick={handleClose}>
                     Cancel
                 </Button>
-                <Button variant='outlined' onClick={() => handleAdd(value)}>Ok</Button>
+               {filtertabBookmarks?.length > 0 && <Button variant='outlined' onClick={() => handleAdd(value)}>Ok</Button>} 
             </DialogActions>
         </Dialog>
     );

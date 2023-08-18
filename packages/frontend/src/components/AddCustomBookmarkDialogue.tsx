@@ -58,7 +58,7 @@ const AddCustomBookmarkDialog = (props: ConfirmationDialogRawProps) => {
             open={true}
         >
             <Typography component="h1" variant="h6" sx={{ padding: "10px 30px" }}>
-              {exemptFolderId ? "Move" : bookmark ? "Update" :  "Add" } Custom Bookmark</Typography>
+                {exemptFolderId ? "Move" : bookmark ? "Update" : "Add"} Custom Bookmark</Typography>
             {
                 filtertabBookmarks?.length > 0 ?
                     <><DialogContent dividers sx={{ height: 240 }}>
@@ -150,13 +150,20 @@ const AddCustomBookmarkDialog = (props: ConfirmationDialogRawProps) => {
                             }
 
                         </DialogActions></> :
-                    <DialogContent dividers sx={{ height: 240 }}>
-                        <Box sx={{ height: '100%', display: "flex", justifyContent: 'center', alignItems: 'center' }}>
-                            <Button variant='outlined' autoFocus onClick={handleShowFolder}>
-                                Please Add Folder first!
+                    <>
+                        <DialogContent dividers sx={{ height: 240 }}>
+                            <Box sx={{ height: '100%', display: "flex", justifyContent: 'center', alignItems: 'center' }}>
+                                <Button variant='outlined' autoFocus onClick={handleShowFolder}>
+                                    Please Add Folder first!
+                                </Button>
+                            </Box>
+                        </DialogContent>
+                        <DialogActions>
+                            <Button variant='outlined' autoFocus onClick={handleClose}>
+                                Cancel
                             </Button>
-                        </Box>
-                    </DialogContent>
+                        </DialogActions>
+                    </>
             }
         </Dialog>
     );

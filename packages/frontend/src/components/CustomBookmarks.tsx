@@ -56,31 +56,31 @@ const CustomBookmarks = () => {
 
     const setFolderName = async (folderName: string) => {
         if (folderName) {
-            await createFolder("customBookmarks", folderName)
+            await createFolder("customBookmarks", folderName, "Add Folder")
             setOpen(false)
         }
     }
     const handleAddBookmark = async (folderId: string, title: string, url: string) => {
         if (folderId && url && title && (!exemptedFolderId && !moveBookmarkId)) {
             setOpenAddBookmark(false)
-            await addCustomBookmark(folderId, url, title)
+            await addCustomBookmark(folderId, url, title, "Add Custom Bookmark")
         }
     }
 
     const handleDeleteFolder = async (folderId: string) => {
         if (folderId) {
-            await deleteFolder("customBookmarks", folderId)
+            await deleteFolder("customBookmarks", folderId, "Delete Folder")
         }
     }
     const handleUpdateFolder = async (folderId: string) => {
         if (folderId) {
-            await updateFolder("customBookmarks", folderId)
+            await updateFolder("customBookmarks", folderId, "Update Folder")
         }
     }
 
     const handleDeleteBookmark = async (folderId: string, bookmarkId: string) => {
         if (folderId && bookmarkId) {
-            await deleteBookmark("customBookmarks", folderId, bookmarkId)
+            await deleteBookmark("customBookmarks", folderId, bookmarkId, "Delete Custom Bookmark")
         }
     }
 
@@ -89,7 +89,7 @@ const CustomBookmarks = () => {
             setOpenAddBookmark(false)
             setExemptedFolderId("");
             setMoveBookmarkId("");
-            await moveBookmark("customBookmarks", exemptedFolderId, folderId, moveBookmarkId)
+            await moveBookmark("customBookmarks", exemptedFolderId, folderId, moveBookmarkId, "Change Custom Bookmark Folder")
         }
     }
 
@@ -112,7 +112,7 @@ const CustomBookmarks = () => {
 
     const handleUpdateBookmark = async (id: string, url: string, title: string, folderId: string) => {
         if (bookmark && ((bookmark.title !== title) || (bookmark.url !== url))) {
-            await updateCustomBookmark(folderId, id, url, title);
+            await updateCustomBookmark(folderId, id, url, title, "Update Custom Bookmark");
             setBookmark(undefined)
             setOpenAddBookmark(false)
         }
@@ -240,7 +240,7 @@ const CustomBookmarks = () => {
                             getView(view, customBookmarks)
                         }
                         {
-                            open && <AddFolderDialog handleClose={() => setOpen(false)} handleAdd={setFolderName} />
+                            open && <AddFolderDialog handleClose={() => setOpen(false)} handleAdd={setFolderName} title='Folder'/>
                         }
                         {
                             openAddBookmark && <AddCustomBookmarkDialog handleClose={() => setOpenAddBookmark(false)}

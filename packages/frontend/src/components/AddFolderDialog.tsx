@@ -9,44 +9,26 @@ import { TextField, Typography } from '@mui/material';
 
 
 type AddFolderDialogTypes = {
+    title: string,
     handleClose: () => void
     handleAdd: (folderName: string) => void
 }
 
 
-const AddFolderDialog: React.FC<AddFolderDialogTypes> = ({ handleClose, handleAdd }) => {
+const AddFolderDialog: React.FC<AddFolderDialogTypes> = ({ title, handleClose, handleAdd }) => {
     const [folderName, setFolderName] = React.useState<string>('')
 
     return (
-
-        // <Dialog
-        //     sx={{ '& .MuiDialog-paper': { width: '70%', maxHeight: 435, marginLeft: "90px", borderRadius: "18px" } }}
-        //     disableEscapeKeyDown open={true} onClose={handleClose}>
-        //     <DialogContent>
-        //         <Box component="form" sx={{ display: 'flex', flexWrap: 'wrap' }}>
-        //             <FormControl sx={{ m: 1, minWidth: 250, width: "100%" }}>
-        //                 <TextField id="standard-basic" label="Folder Name" variant="standard" value={folderName}
-        //                     onChange={(e) => setFolderName(e.target.value)}
-        //                 />
-        //             </FormControl>
-        //         </Box>
-        //     </DialogContent>
-        //     <DialogActions>
-        //         <Button variant="outlined" onClick={handleClose}>Cancel</Button>
-        //         <Button variant="outlined" onClick={() => handleAdd(folderName)}>Ok</Button>
-        //     </DialogActions>
-        // </Dialog>
-
         <Dialog
             sx={{ '& .MuiDialog-paper': { width: '70%', maxHeight: 435, marginLeft: "90px", borderRadius: "18px" } }}
             maxWidth="xs"
             open={true}
         >
-            <Typography component="h1" variant="h6" sx={{ padding: "10px 30px" }}>Add Folder</Typography>
+            <Typography component="h1" variant="h6" sx={{ padding: "10px 30px" }}>Add {title}</Typography>
             <DialogContent dividers>
                 <Box component="form" sx={{ display: 'flex', flexWrap: 'wrap' }}>
                     <FormControl sx={{ m: 1, minWidth: 250, width: "100%" }}>
-                        <TextField id="standard-basic" label="Folder Name" variant="standard" value={folderName}
+                        <TextField id="standard-basic" label={`${title} Name`} variant="standard" value={folderName}
                             onChange={(e) => setFolderName(e.target.value)}
                         />
                     </FormControl>

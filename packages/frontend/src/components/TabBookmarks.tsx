@@ -58,36 +58,36 @@ const TabBookmarks = () => {
 
     const setFolderName = async (folderName: string) => {
         if (folderName) {
-            await createFolder("tabBookmarks", folderName)
+            await createFolder("tabBookmarks", folderName, "Add Folder")
             setOpen(false)
         }
     }
     const handleAddBookmark = async (folderId: string) => {
         if (folderId && activeTab && (!exemptedFolderId && !moveBookmarkId)) {
             setOpenAddBookmark(false)
-            await addTabBookmark(folderId, activeTab.url)
+            await addTabBookmark(folderId, activeTab.url, "Add Bookmark")
         } else if (folderId && exemptedFolderId && moveBookmarkId) {
             setOpenAddBookmark(false)
             setExemptedFolderId("");
             setMoveBookmarkId("");
-            await moveBookmark("tabBookmarks", exemptedFolderId, folderId, moveBookmarkId)
+            await moveBookmark("tabBookmarks", exemptedFolderId, folderId, moveBookmarkId, "Change Bookmark Folder")
         }
     }
 
     const handleDeleteFolder = async (folderId: string) => {
         if (folderId) {
-            await deleteFolder("tabBookmarks", folderId)
+            await deleteFolder("tabBookmarks", folderId, "Delete Folder")
         }
     }
     const handleUpdateFolder = async (folderId: string) => {
         if (folderId) {
-            await updateFolder("tabBookmarks", folderId)
+            await updateFolder("tabBookmarks", folderId, "Update Folder")
         }
     }
 
     const handleDeleteBookmark = async (folderId: string, bookmarkId: string) => {
         if (folderId && bookmarkId) {
-            await deleteBookmark("tabBookmarks", folderId, bookmarkId)
+            await deleteBookmark("tabBookmarks", folderId, bookmarkId, "Delete Bookmark")
         }
     }
 
@@ -217,7 +217,7 @@ const TabBookmarks = () => {
                             getView(view, tabBookmarks)
                         }
                         {
-                            open && <AddFolderDialog handleClose={() => setOpen(false)} handleAdd={setFolderName} />
+                            open && <AddFolderDialog handleClose={() => setOpen(false)} handleAdd={setFolderName} title='Folder' />
                         }
                         {
                             openAddBookmark && <AddBookmarkDialog handleClose={() => setOpenAddBookmark(false)}

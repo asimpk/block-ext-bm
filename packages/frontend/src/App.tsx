@@ -3,22 +3,21 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import BookmarksOutlinedIcon from '@material-ui/icons/BookmarksOutlined';
 import AccountCircleOutlinedIcon from '@material-ui/icons/AccountCircleOutlined';
 import AddLinkOutlinedIcon from '@mui/icons-material/AddLinkOutlined';
+import NoteAltOutlinedIcon from '@mui/icons-material/NoteAltOutlined';
 import CssBaseline from '@mui/material/CssBaseline';
 import DashboardIcon from '@material-ui/icons/Dashboard';
 import './App.css';
 import { useWeb3 } from './contexts/Web3Context/Web3Context';
-import { Alert, AlertTitle, Box, CircularProgress, Divider, List, ListItemButton, ListItemIcon, Paper, Snackbar, Tooltip } from '@mui/material';
+import { Alert, Box, CircularProgress, Divider, List, ListItemButton, ListItemIcon, Paper, Snackbar, Tooltip } from '@mui/material';
 import TabBookmarks from './components/TabBookmarks';
 import CustomBookmarks from "./components/CustomBookmarks";
-import BlockchainBookmarkDetail from './components/BlockchainBookmarkDetail';
+import PersonalNotes from "./components/PersonalNotes"
 import CommunityBookmarks from './components/CommunityBookmarks';
 
 import RecoverAccount from './components/RecoverAccount';
 import WalletNew from './components/WalletNew';
 import CreateAccount from './components/CreateAccount';
-
 import ImportAccount from './components/ImportAccount';
-import FolderBookmarks from './components/FolderBookmarks';
 import ConfirmModal from './components/Modals/ConfirmModal';
 import { useState } from "react";
 
@@ -61,7 +60,7 @@ function App() {
           <Snackbar open={true} autoHideDuration={1000} sx={{ width: '100%', left: 0, right: 0 }}>
             <Alert severity="success" icon={false} sx={{ width: "100%" }}>
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <CircularProgress size="1rem" sx={{ mr: 1 }} />  Transaction is — <strong>{'Successful'}!</strong>
+                Transaction is — <strong>{'Successful'}!</strong>
               </Box>
             </Alert>
           </Snackbar>}
@@ -93,10 +92,17 @@ function App() {
                 </ListItemIcon>
               </ListItemButton>
             </Tooltip>
+            <Tooltip title="Personal Notes">
+              <ListItemButton key={4} onClick={() => { navigate("/personal-notes"); setSelectedMenu(4) }} sx={selectedMenu === 4 ? { backgroundColor: "rgba(255, 255, 255, 0.08)", marginTop: '4px' } : { marginTop: '4px' }}>
+                <ListItemIcon sx={{ minWidth: 40 }}>
+                  <NoteAltOutlinedIcon />
+                </ListItemIcon>
+              </ListItemButton>
+            </Tooltip>
           </List>
           <List sx={{ maxWidth: 60 }}>
             <Tooltip title="Wallet">
-              <ListItemButton key={4} onClick={() => { navigate("/wallet"); setSelectedMenu(4) }} sx={selectedMenu === 4 ? { backgroundColor: "rgba(255, 255, 255, 0.08)" } : null}>
+              <ListItemButton key={5} onClick={() => { navigate("/wallet"); setSelectedMenu(5) }} sx={selectedMenu === 5 ? { backgroundColor: "rgba(255, 255, 255, 0.08)" } : null}>
                 <ListItemIcon sx={{ minWidth: 40 }}>
                   <AccountCircleOutlinedIcon />
                 </ListItemIcon>
@@ -111,8 +117,9 @@ function App() {
             <Route path="/" element={<WalletNew />} />
             <Route path="/blockchain-bookmarks" element={<TabBookmarks />} />
             <Route path="/custom-bookmarks" element={<CustomBookmarks />} />
-            <Route path="/blockchain-bookmarks/:folderId" element={<FolderBookmarks />} />
-            <Route path="/blockchain-bookmarks/:folderId/:bookmarkId" element={<BlockchainBookmarkDetail />} />
+            <Route path="/personal-notes" element={<PersonalNotes />} />
+            {/* <Route path="/blockchain-bookmarks/:folderId" element={<FolderBookmarks />} />
+            <Route path="/blockchain-bookmarks/:folderId/:bookmarkId" element={<BlockchainBookmarkDetail />} /> */}
             <Route path="/community-bookmarks" element={<CommunityBookmarks />} />
             <Route path="/wallet" element={<WalletNew />} />
             <Route path="/recover-account" element={<RecoverAccount />} />

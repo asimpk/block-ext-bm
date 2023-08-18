@@ -1,6 +1,6 @@
 import { Wallet, ethers } from "ethers";
 import { createContext, useContext } from "react";
-export type ContractName = 'tabBookmarks' | 'customBookmarks';
+export type ContractName = 'tabBookmarks' | 'customBookmarks' | 'personalNotes';
 type Web3ContextType = {
     Wallet: Wallet | undefined;
     publicAddress: string | undefined;
@@ -18,16 +18,20 @@ type Web3ContextType = {
     userSignIn: (passphrase: string) => Promise<{ status: boolean, message: string }>;
     getPrivateKey: (passphrase: string) => Promise<boolean>;
     getDcryptedString: (wallet: Wallet, encryptedString: string) => Promise<string>;
-    createFolder: (contractName: ContractName,  folderName: string) => Promise<void>,
-    deleteFolder: (contractName: ContractName,  folderId: string) => Promise<void>,
-    updateFolder: (contractName: ContractName, folderId: string) => Promise<void>,
-    deleteBookmark: (contractName: ContractName, folderId: string, BookmarkId: string) => Promise<void>,
-    moveBookmark: (contractName: ContractName, fromFolderId: string, toFolderId: string,  BookmarkId: string) => Promise<void>,
+    createFolder: (contractName: ContractName,  folderName: string, methodName: string) => Promise<void>,
+    deleteFolder: (contractName: ContractName,  folderId: string, methodName: string) => Promise<void>,
+    updateFolder: (contractName: ContractName, folderId: string, methodName: string) => Promise<void>,
+    deleteBookmark: (contractName: ContractName, folderId: string, BookmarkId: string, methodName: string) => Promise<void>,
+    deleteNote: (contractName: ContractName, folderId: string, noteId: string, methodName: string) => Promise<void>,
+    moveBookmark: (contractName: ContractName, fromFolderId: string, toFolderId: string,  BookmarkId: string, methodName: string) => Promise<void>,
+    moveNote: (contractName: ContractName, fromFolderId: string, toFolderId: string,  noteId: string, methodName: string) => Promise<void>,
     closeConfirmModal: () => void,
     confirmTransaction: () => void,
-    addTabBookmark: (folderId: string, url: string) => Promise<void>,
-    addCustomBookmark: (folderId: string, url: string, title: string) => Promise<void>,
-    updateCustomBookmark: (folderId: string, bookmarkId:string, url: string, title: string) => Promise<void>
+    addTabBookmark: (folderId: string, url: string, methodName: string) => Promise<void>,
+    addCustomBookmark: (folderId: string, url: string, title: string, methodName: string) => Promise<void>,
+    addPersonalNote: (folderId: string, title: string, description: string, methodName: string) => Promise<void>,
+    updateCustomBookmark: (folderId: string, bookmarkId:string, url: string, title: string, methodName: string) => Promise<void>,
+    updatePersonalNote: (folderId: string, noteId:string, title: string, description: string, methodName: string) => Promise<void>,
 };
 
 export const Web3Context = createContext<Web3ContextType | null>(null);

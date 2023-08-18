@@ -25,6 +25,7 @@ interface ContractData {
 
 const CONTRACT_ADDRESS_TabBookMarks = "0x5FbDB2315678afecb367f032d93F642f64180aa3"
 const CONTRACT_ADDRESS_CUSTOMBookMarks = "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512"
+const CONTRACT_ADDRESS_PERSONALNOTES = "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0"
 
 export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
     const [wallet, setWallet] = useState<Wallet>()
@@ -103,6 +104,11 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
                             abi: contractsAbi.customBookmarksAbi,
                             address: CONTRACT_ADDRESS_CUSTOMBookMarks,
                             name: "customBookmarks"
+                        },
+                        {
+                            abi: contractsAbi.personalNotesAbi,
+                            address: CONTRACT_ADDRESS_PERSONALNOTES,
+                            name: "personalNotes"
                         }
                     ];
                     const contracts = await getContractInstances(WalletTemp, contractsData);
@@ -136,7 +142,7 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
             if (status === 'confirmed' || 'failed') {
                 setTimeout(() => {
                     setStatus('idle')
-                }, 5000)
+                }, 1500)
             } else {
                 setStatus('idle')
             }
@@ -174,6 +180,11 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
                         abi: contractsAbi.customBookmarksAbi,
                         address: CONTRACT_ADDRESS_CUSTOMBookMarks,
                         name: "customBookmarks"
+                    },
+                    {
+                        abi: contractsAbi.personalNotesAbi,
+                        address: CONTRACT_ADDRESS_PERSONALNOTES,
+                        name: "personalNotes"
                     }
                 ];
 
@@ -228,6 +239,11 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
                         abi: contractsAbi.customBookmarksAbi,
                         address: CONTRACT_ADDRESS_CUSTOMBookMarks,
                         name: "customBookmarks"
+                    },
+                    {
+                        abi: contractsAbi.personalNotesAbi,
+                        address: CONTRACT_ADDRESS_PERSONALNOTES,
+                        name: "personalNotes"
                     }
                 ];
                 const publicKey = WalletTemp?.address;
@@ -302,6 +318,11 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
                         abi: contractsAbi.customBookmarksAbi,
                         address: CONTRACT_ADDRESS_CUSTOMBookMarks,
                         name: "customBookmarks"
+                    },
+                    {
+                        abi: contractsAbi.personalNotesAbi,
+                        address: CONTRACT_ADDRESS_PERSONALNOTES,
+                        name: "personalNotes"
                     }
                 ];
                 const publicKey = WalletTemp?.address;
@@ -483,7 +504,7 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
 
 
 
-    const createFolder = async (contractName: ContractName, folderName: string) => {
+    const createFolder = async (contractName: ContractName, folderName: string, methodName: string) => {
         if (contractInstances && wallet) {
             const contract = contractInstances[contractName];
             const uuid = nanoid()
@@ -496,7 +517,7 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
                 const transaction = await prepareTransaction(contract, wallet, "addFolder", [folderId, encryptedFolderName, color]);
                 if (transaction) {
                     const totalCost = getTotalCost(transaction);
-                    setTransaction({ transaction, method: "Add Folder", totalCost });
+                    setTransaction({ transaction, method: methodName, totalCost });
                 }
                 setLoadingTransaction(false);
             } catch (error) {
@@ -508,7 +529,7 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
         }
     }
 
-    const deleteFolder = async (contractName: ContractName, deltFolderId: string) => {
+    const deleteFolder = async (contractName: ContractName, deltFolderId: string, methodName: string) => {
         if (contractInstances && wallet) {
             const contract = contractInstances[contractName];
             const folderId = ethers.utils.formatBytes32String(deltFolderId);
@@ -518,7 +539,7 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
                 const transaction = await prepareTransaction(contract, wallet, "deleteFolder", [folderId]);
                 if (transaction) {
                     const totalCost = getTotalCost(transaction);
-                    setTransaction({ transaction, method: "Delete Folder", totalCost });
+                    setTransaction({ transaction, method: methodName, totalCost });
                 }
                 setLoadingTransaction(false);
             } catch (error) {
@@ -529,7 +550,7 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
         }
     }
 
-    const updateFolder = async (contractName: ContractName, deltFolderId: string) => {
+    const updateFolder = async (contractName: ContractName, deltFolderId: string, methodName: string) => {
         if (contractInstances && wallet) {
             const contract = contractInstances[contractName];
             const folderId = ethers.utils.formatBytes32String(deltFolderId);
@@ -541,7 +562,7 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
                 const transaction = await prepareTransaction(contract, wallet, "updateFolder", [folderId, encryptedFolderName, color]);
                 if (transaction) {
                     const totalCost = getTotalCost(transaction);
-                    setTransaction({ transaction, method: "Update Folder", totalCost });
+                    setTransaction({ transaction, method: methodName, totalCost });
                 }
                 setLoadingTransaction(false);
             } catch (error) {
@@ -552,7 +573,7 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
         }
     }
 
-    const addTabBookmark = async (folderId: string, url: string) => {
+    const addTabBookmark = async (folderId: string, url: string, methodName: string) => {
         if (contractInstances && wallet) {
             const tabBookmarks = contractInstances["tabBookmarks"];
             const uuid = nanoid();
@@ -565,7 +586,7 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
                 const transaction = await prepareTransaction(tabBookmarks, wallet, "addBookmark", [folderIdBytes, bookmarkId, encryptedUrl]);
                 if (transaction) {
                     const totalCost = getTotalCost(transaction);
-                    setTransaction({ transaction, method: "Add Bookmark", totalCost });
+                    setTransaction({ transaction, method: methodName, totalCost });
                 }
                 setLoadingTransaction(false);
             } catch (error) {
@@ -576,7 +597,7 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
         }
     }
 
-    const addCustomBookmark = async (folderId: string, url: string, title: string) => {
+    const addCustomBookmark = async (folderId: string, url: string, title: string, methodName: string) => {
         if (contractInstances && wallet) {
             const customBookmarks = contractInstances["customBookmarks"];
             const uuid = nanoid();
@@ -590,7 +611,7 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
                 const transaction = await prepareTransaction(customBookmarks, wallet, "addBookmark", [folderIdBytes, bookmarkId, encryptedUrl, encryptedTitle]);
                 if (transaction) {
                     const totalCost = getTotalCost(transaction);
-                    setTransaction({ transaction, method: "Add Custom Bookmark", totalCost });
+                    setTransaction({ transaction, method: methodName, totalCost });
                 }
                 setLoadingTransaction(false);
             } catch (error) {
@@ -601,7 +622,32 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
         }
     }
 
-    const updateCustomBookmark = async (folderId: string, bookmarkId: string, url: string, title: string) => {
+    const addPersonalNote = async (folderId: string, title: string, description: string, methodName: string) => {
+        if (contractInstances && wallet) {
+            const personalNotes = contractInstances["personalNotes"];
+            const uuid = nanoid();
+            const encryptedTitle = await getEncryptedString(wallet, title);
+            const encryptedDescription = await getEncryptedString(wallet, description);
+            const folderIdBytes = ethers.utils.formatBytes32String(folderId);
+            const bookmarkId = ethers.utils.formatBytes32String(uuid);
+            setLoadingTransaction(true);
+            setShowConfirm(true)
+            try {
+                const transaction = await prepareTransaction(personalNotes, wallet, "addNote", [folderIdBytes, bookmarkId,encryptedTitle, encryptedDescription]);
+                if (transaction) {
+                    const totalCost = getTotalCost(transaction);
+                    setTransaction({ transaction, method: methodName, totalCost });
+                }
+                setLoadingTransaction(false);
+            } catch (error) {
+                setLoadingTransaction(false);
+                setShowConfirm(false);
+                setTransaction(undefined)
+            }
+        }
+    }
+
+    const updateCustomBookmark = async (folderId: string, bookmarkId: string, url: string, title: string, methodName: string) => {
         if (contractInstances && wallet) {
             const customBookmarks = contractInstances["customBookmarks"];
             const encryptedUrl = await getEncryptedString(wallet, url);
@@ -614,7 +660,7 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
                 const transaction = await prepareTransaction(customBookmarks, wallet, "updateBookmark", [folderIdBytes, bookmarkIdBytes, encryptedUrl, encryptedTitle]);
                 if (transaction) {
                     const totalCost = getTotalCost(transaction);
-                    setTransaction({ transaction, method: "Update Custom Bookmark", totalCost });
+                    setTransaction({ transaction, method: methodName, totalCost });
                 }
                 setLoadingTransaction(false);
             } catch (error) {
@@ -625,7 +671,31 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
         }
     }
 
-    const deleteBookmark = async (contractName: ContractName, folderId: string, bookmarkId: string) => {
+    const updatePersonalNote = async (folderId: string, noteId: string, title: string, description: string, methodName: string) => {
+        if (contractInstances && wallet) {
+            const customBookmarks = contractInstances["personalNotes"];
+            const encryptedTitle = await getEncryptedString(wallet, title);
+            const encryptedDescription = await getEncryptedString(wallet, description);
+            const folderIdBytes = ethers.utils.formatBytes32String(folderId);
+            const bookmarkIdBytes = ethers.utils.formatBytes32String(noteId);
+            setLoadingTransaction(true);
+            setShowConfirm(true)
+            try {
+                const transaction = await prepareTransaction(customBookmarks, wallet, "updateNote", [folderIdBytes, bookmarkIdBytes, encryptedTitle, encryptedDescription]);
+                if (transaction) {
+                    const totalCost = getTotalCost(transaction);
+                    setTransaction({ transaction, method: methodName, totalCost });
+                }
+                setLoadingTransaction(false);
+            } catch (error) {
+                setLoadingTransaction(false);
+                setShowConfirm(false);
+                setTransaction(undefined)
+            }
+        }
+    }
+
+    const deleteBookmark = async (contractName: ContractName, folderId: string, bookmarkId: string, methodName: string) => {
         if (contractInstances && wallet) {
             const contract = contractInstances[contractName];
             const bytesFolderId = ethers.utils.formatBytes32String(folderId);
@@ -636,7 +706,7 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
                 const transaction = await prepareTransaction(contract, wallet, "deleteBookmark", [bytesFolderId, bytesBookmarkId]);
                 if (transaction) {
                     const totalCost = getTotalCost(transaction);
-                    setTransaction({ transaction, method: "Delete Bookmark", totalCost });
+                    setTransaction({ transaction, method: methodName, totalCost });
                 }
                 setLoadingTransaction(false);
             } catch (error) {
@@ -647,20 +717,64 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
         }
     }
 
-    const moveBookmark = async (contractName: ContractName, fromFolderId: string, toFolderId: string, bookmarkId: string) => {
+    const deleteNote = async (contractName: ContractName, folderId: string, noteId: string, methodName: string) => {
+        if (contractInstances && wallet) {
+            const contract = contractInstances[contractName];
+            const bytesFolderId = ethers.utils.formatBytes32String(folderId);
+            const bytesNoteId = ethers.utils.formatBytes32String(noteId);
+            setLoadingTransaction(true);
+            setShowConfirm(true)
+            try {
+                const transaction = await prepareTransaction(contract, wallet, "deleteNote", [bytesFolderId, bytesNoteId]);
+                if (transaction) {
+                    const totalCost = getTotalCost(transaction);
+                    setTransaction({ transaction, method: methodName, totalCost });
+                }
+                setLoadingTransaction(false);
+            } catch (error) {
+                setLoadingTransaction(false);
+                setShowConfirm(false);
+                setTransaction(undefined)
+            }
+        }
+    }
+
+    const moveBookmark = async (contractName: ContractName, fromFolderId: string, toFolderId: string, bookmarkId: string,methodName: string) => {
         if (contractInstances && wallet) {
             const contract = contractInstances[contractName];
             const bytesFromFolderId = ethers.utils.formatBytes32String(fromFolderId);
             const bytesToFolderId = ethers.utils.formatBytes32String(toFolderId);
             const bytesBookmarkId = ethers.utils.formatBytes32String(bookmarkId);
-
             setLoadingTransaction(true);
             setShowConfirm(true)
             try {
                 const transaction = await prepareTransaction(contract, wallet, "moveBookmark", [bytesFromFolderId, bytesToFolderId, bytesBookmarkId])
                 if (transaction) {
                     const totalCost = getTotalCost(transaction);
-                    setTransaction({ transaction, method: "Move Bookmark", totalCost });
+                    setTransaction({ transaction, method: methodName, totalCost });
+                }
+                setLoadingTransaction(false);
+            } catch (error) {
+                setLoadingTransaction(false);
+                setShowConfirm(false);
+                setTransaction(undefined)
+            }
+        }
+    }
+
+    const moveNote = async (contractName: ContractName, fromFolderId: string, toFolderId: string, noteId: string, methodName: string) => {
+        if (contractInstances && wallet) {
+            const contract = contractInstances[contractName];
+            const bytesFromFolderId = ethers.utils.formatBytes32String(fromFolderId);
+            const bytesToFolderId = ethers.utils.formatBytes32String(toFolderId);
+            const bytesNoteId = ethers.utils.formatBytes32String(noteId);
+            setLoadingTransaction(true);
+            setShowConfirm(true)
+            try {
+                const transaction = await prepareTransaction(contract, wallet, "moveNote", [bytesFromFolderId, bytesToFolderId, bytesNoteId])
+                if (transaction) {
+                    const totalCost = getTotalCost(transaction);
+                    setTransaction({ transaction, method: methodName, totalCost });
                 }
                 setLoadingTransaction(false);
             } catch (error) {
@@ -740,13 +854,17 @@ export const Web3Provider: React.FC<{ children: any }> = ({ children }) => {
         deleteFolder,
         updateFolder,
         deleteBookmark,
+        deleteNote,
         moveBookmark,
+        moveNote,
         closeConfirmModal,
         confirmTransaction,
         status,
         addTabBookmark,
         addCustomBookmark,
-        updateCustomBookmark
+        addPersonalNote,
+        updateCustomBookmark,
+        updatePersonalNote
 
     }
 

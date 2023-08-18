@@ -11,16 +11,22 @@ async function main() {
 
   const TabBookmarks = await ethers.getContractFactory("TabBookmarks")
   const CustomBookmarks = await ethers.getContractFactory("CustomBookmarks")
+  const PersonalNotes = await ethers.getContractFactory("PersonalNotes")
 
   const tabBookmarks = await TabBookmarks.deploy();
   const customBookmarks = await CustomBookmarks.deploy();
+  const personalNotes = await PersonalNotes.deploy();
 
   await tabBookmarks.waitForDeployment();
   await customBookmarks.waitForDeployment();
+  await personalNotes.waitForDeployment();
 
+  const tabBookmarksAddress = await tabBookmarks.getAddress()
+  const customBookmarksAddress =  await customBookmarks.getAddress()
+  const personalNotesAddress =  await personalNotes.getAddress()
 
   console.log(
-    `Lock with deployed to ${await tabBookmarks.getAddress()} ${await customBookmarks.getAddress()}`
+    `Contracts with deployed to ${tabBookmarksAddress} ${customBookmarksAddress} ${personalNotesAddress}`
   );
 }
 

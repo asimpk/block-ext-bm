@@ -181,7 +181,7 @@ function WalletView({
 
         <Tooltip sx={{ padding: 0, margin: 0 }} title={
           <Box sx={{ wordBreak: 'break-word', padding: 0, margin: 0, height: "100%" }}>
-            <Typography sx={{ marginBottom: "4px", fontSize: '12px' }}>We are using Polygon test network, get MATICS from these faucet links!</Typography>
+            <Typography sx={{ marginBottom: "4px", fontSize: '12px' }}>Using Polygon test network, get MATICS from these faucet links!</Typography>
             <Link href={"https://mumbaifaucet.com/"} target="_blank" underline="none" color='rgb(144, 202, 249)' sx={{ margin: 0, padding: 0 }}>
               <Typography
                 sx={{ margin: 0, padding: 0 }}
